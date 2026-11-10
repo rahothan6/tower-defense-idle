@@ -1,5 +1,15 @@
 import React, { useRef, useEffect } from 'react';
 import { getDistance, getAngle } from '../utils/gameMath';
+import {
+  drawHighWizard,
+  drawPoring,
+  drawGTB,
+  drawBaphomet,
+  drawCombatFamiliar,
+  drawLaserOculus,
+  drawHealingFairy,
+  drawPoisonPuddleArt
+} from '../utils/roSprites';
 
 // วาดสายฟ้าเชื่อมตอนชิ่งกระสุน
 function drawLightning(ctx, x1, y1, x2, y2, segments = 5, offset = 12) {
@@ -42,6 +52,7 @@ export default function GameCanvas({
     bullets: [],
     damageTexts: [],
     poisonPuddles: [],
+    toxicFumes: [],
     lightningBeams: [],
     meteors: [],
     meteorTimer: 0,
@@ -54,6 +65,7 @@ export default function GameCanvas({
     shieldCooldownTimer: 0,
     isShieldActive: true,
     lastShotTime: 0,
+    lastTargetAngle: 0,
     poisonSpawnTimer: 0,
     spawnTimer: 1000,
     lastTriggeredWave: 0,
@@ -398,18 +410,32 @@ export default function GameCanvas({
         let rewardCoins = 10 + currentWave * 2;
         let damageToTower = Math.min(45, 12 + currentWave);
 
+        let monsterType = 'poring';
         if (isBoss) {
           finalHp = baseHp * 5;
-          radius = 22;
+          radius = 24;
           speed = 20;
           rewardCoins = 60 + currentWave * 4;
           damageToTower = Math.min(80, 35 + currentWave * 1.5);
+          monsterType = currentWave >= 25 ? 'baphomet' : 'gtb';
         } else if (isMiniBoss) {
           finalHp = baseHp * 2.5;
-          radius = 17;
+          radius = 18;
           speed = 25;
           rewardCoins = 35 + currentWave * 3;
           damageToTower = Math.min(60, 25 + currentWave * 1.2);
+          const miniTypes = ['angeling', 'deviling', 'ghostring'];
+          monsterType = miniTypes[Math.floor(Math.random() * miniTypes.length)];
+        } else {
+          if (currentWave <= 3) {
+            monsterType = Math.random() < 0.6 ? 'poring' : 'drops';
+          } else if (currentWave <= 7) {
+            const r = Math.random();
+            monsterType = r < 0.4 ? 'poporing' : (r < 0.75 ? 'marin' : 'poring');
+          } else {
+            const allTypes = ['poring', 'drops', 'poporing', 'marin'];
+            monsterType = allTypes[Math.floor(Math.random() * allTypes.length)];
+          }
         }
 
         entities.enemies.push({
@@ -421,10 +447,12 @@ export default function GameCanvas({
           radius,
           isBoss,
           isMiniBoss,
+          monsterType,
           rewardCoins,
           damageToTower,
           frozenTimer: 0,
-          hitFlashTimer: 0
+          hitFlashTimer: 0,
+          poisonedTimer: 0
         });
       }
 
@@ -444,9 +472,16 @@ export default function GameCanvas({
             entities.poisonPuddles.push({
               x: centerX + Math.cos(puddleAngle) * puddleDist,
               y: centerY + Math.sin(puddleAngle) * puddleDist,
-              radius: (26 + poisonLvl * 4) * areaMult,
+              radius: (28 + poisonLvl * 4) * areaMult,
               duration: 4000 * durationMult,
-              damagePerTick: currentStats.damage * (0.35 + poisonLvl * 0.15) * spellDamageMult
+              damagePerTick: currentStats.damage * (0.35 + poisonLvl * 0.15) * spellDamageMult,
+              bubbles: [
+                { ox: -12, oy: -6, size: 4, speed: 0.006, phase: 0 },
+                { ox: 10, oy: 8, size: 5, speed: 0.005, phase: 2 },
+                { ox: 4, oy: -14, size: 3.5, speed: 0.008, phase: 4 },
+                { ox: -8, oy: 12, size: 4.5, speed: 0.007, phase: 1 },
+                { ox: 14, oy: -8, size: 3, speed: 0.009, phase: 3 }
+              ]
             });
           }
         }
@@ -456,18 +491,25 @@ export default function GameCanvas({
         const p = entities.poisonPuddles[i];
         p.duration -= 16;
 
-        ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        drawPoisonPuddleArt(ctx, p, timestamp);
+
+        if (Math.random() < 0.2) {
+          entities.toxicFumes.push({
+            x: p.x + (Math.random() - 0.5) * (p.radius * 1.1),
+            y: p.y + (Math.random() - 0.5) * (p.radius * 0.8),
+            vy: -0.7 - Math.random() * 0.5,
+            vx: (Math.random() - 0.5) * 0.5,
+            life: 25,
+            maxLife: 25,
+            size: 2.5 + Math.random() * 1.5
+          });
+        }
 
         for (let k = entities.enemies.length - 1; k >= 0; k--) {
           const e = entities.enemies[k];
           if (getDistance(p.x, p.y, e.x, e.y) < p.radius + e.radius) {
             e.hp -= p.damagePerTick * 0.016;
+            e.poisonedTimer = 35;
             if (Math.random() < 0.08) e.hitFlashTimer = 2;
             if (e.hp <= 0) {
               entities.enemies.splice(k, 1);
@@ -478,6 +520,24 @@ export default function GameCanvas({
         }
 
         if (p.duration <= 0) entities.poisonPuddles.splice(i, 1);
+      }
+
+      // วาดละอองไอพิษ
+      for (let fIdx = entities.toxicFumes.length - 1; fIdx >= 0; fIdx--) {
+        const f = entities.toxicFumes[fIdx];
+        f.x += f.vx;
+        f.y += f.vy;
+        f.life--;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, f.life / f.maxLife);
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        if (f.life <= 0) entities.toxicFumes.splice(fIdx, 1);
       }
 
       // 4. ระบบเกราะหมุน (Orbiting Shield)
@@ -627,52 +687,133 @@ export default function GameCanvas({
             const meteorDamage = currentStats.damage * (2.5 + meteorLvl * 1.5) * spellDamageMult;
 
             entities.meteors.push({
-              x: randomTarget.x,
-              y: randomTarget.y,
+              targetX: randomTarget.x,
+              targetY: randomTarget.y,
+              startX: randomTarget.x - 120,
+              startY: -50,
               radius: blastRadius,
               damage: meteorDamage,
-              life: 18
+              progress: 0,
+              hasExploded: false,
+              explosionLife: 16
             });
-
-            for (let j = entities.enemies.length - 1; j >= 0; j--) {
-              const e = entities.enemies[j];
-              if (getDistance(randomTarget.x, randomTarget.y, e.x, e.y) < blastRadius + e.radius) {
-                e.hp -= meteorDamage;
-                e.hitFlashTimer = 4;
-                entities.damageTexts.push({
-                  x: e.x,
-                  y: e.y - 12,
-                  text: Math.round(meteorDamage),
-                  isCrit: true,
-                  alpha: 1.0,
-                  vy: -1.5
-                });
-                if (e.hp <= 0) {
-                  entities.enemies.splice(j, 1);
-                  onEnemyKilled(e.rewardCoins || 10);
-                  triggerSpellKillExplosion(e.x, e.y);
-                }
-              }
-            }
           }
         }
       }
 
       for (let i = entities.meteors.length - 1; i >= 0; i--) {
         const m = entities.meteors[i];
-        m.life--;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, m.life / 18);
-        ctx.fillStyle = '#f97316';
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.restore();
+        m.progress += 0.045; // ความเร็วตกพอดีๆ ให้เห็นวงเตือนชัดเจน
+        const currX = m.startX + (m.targetX - m.startX) * m.progress;
+        const currY = m.startY + (m.targetY - m.startY) * m.progress;
 
-        if (m.life <= 0) entities.meteors.splice(i, 1);
+        if (m.progress < 1) {
+          // 1. วงเตือนตำแหน่งตกบนพื้น (Ground AoE Target Indicator)
+          ctx.save();
+          const pulseAlpha = 0.15 + (m.progress * 0.35);
+          ctx.fillStyle = `rgba(239, 68, 68, ${pulseAlpha})`;
+          ctx.beginPath();
+          ctx.arc(m.targetX, m.targetY, m.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // ขอบเส้นประหมุนเตือนภัย
+          ctx.strokeStyle = '#f97316';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.lineDashOffset = -timestamp * 0.04;
+          ctx.beginPath();
+          ctx.arc(m.targetX, m.targetY, m.radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // วงแหวนหดนับถอยหลังบอกจังหวะกระทบพื้น
+          const shrinkR = Math.max(0, m.radius * (1 - m.progress));
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(m.targetX, m.targetY, shrinkR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // เป้ากากบาทตรงกลาง
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(m.targetX - 7, m.targetY);
+          ctx.lineTo(m.targetX + 7, m.targetY);
+          ctx.moveTo(m.targetX, m.targetY - 7);
+          ctx.lineTo(m.targetX + 7, m.targetY);
+          ctx.stroke();
+          ctx.restore();
+
+          // 2. ลูกอุกกาบาตเพลิงพุ่งลงมาจากฟ้าพร้อมหางไฟ
+          const ang = Math.atan2(m.targetY - m.startY, m.targetX - m.startX);
+          for (let tr = 1; tr <= 4; tr++) {
+            ctx.fillStyle = tr % 2 === 0 ? '#f97316' : '#ef4444';
+            ctx.beginPath();
+            ctx.arc(
+              currX - Math.cos(ang) * (tr * 7),
+              currY - Math.sin(ang) * (tr * 7),
+              Math.max(2, 14 - tr * 2.5),
+              0, Math.PI * 2
+            );
+            ctx.fill();
+          }
+
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#f97316';
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          ctx.arc(currX, currY, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.arc(currX, currY, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+        } else if (!m.hasExploded) {
+          // 3. จังหวะกระทบพื้นระเบิดตูม สร้างความเสียหาย
+          m.hasExploded = true;
+          for (let j = entities.enemies.length - 1; j >= 0; j--) {
+            const e = entities.enemies[j];
+            if (getDistance(m.targetX, m.targetY, e.x, e.y) < m.radius + e.radius) {
+              e.hp -= m.damage;
+              e.hitFlashTimer = 4;
+              entities.damageTexts.push({
+                x: e.x,
+                y: e.y - 12,
+                text: Math.round(m.damage),
+                isCrit: true,
+                alpha: 1.0,
+                vy: -1.5
+              });
+              if (e.hp <= 0) {
+                entities.enemies.splice(j, 1);
+                onEnemyKilled(e.rewardCoins || 10);
+                triggerSpellKillExplosion(e.x, e.y);
+              }
+            }
+          }
+        } else {
+          // 4. เอฟเฟกต์คลื่นกระแทกกระจายหลังระเบิด
+          m.explosionLife--;
+          ctx.save();
+          const expAlpha = Math.max(0, m.explosionLife / 16);
+          ctx.globalAlpha = expAlpha;
+          ctx.strokeStyle = '#f97316';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(m.targetX, m.targetY, m.radius * (1 + (16 - m.explosionLife) * 0.03), 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(254, 240, 138, 0.35)';
+          ctx.beginPath();
+          ctx.arc(m.targetX, m.targetY, m.radius * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          if (m.explosionLife <= 0) entities.meteors.splice(i, 1);
+        }
       }
 
       // 6.5. ระบบ RAILGUN PIERCER (ลำแสงทะลวงแถว)
@@ -812,6 +953,7 @@ export default function GameCanvas({
       if (target && timestamp - entities.lastShotTime > fireInterval) {
         entities.lastShotTime = timestamp;
         const baseAngle = getAngle(centerX, centerY, target.x, target.y);
+        entities.lastTargetAngle = baseAngle;
         const isCrit = Math.random() < critChance;
         const actualDamage = isCrit ? currentStats.damage * critDamageMult : currentStats.damage;
 
@@ -848,10 +990,19 @@ export default function GameCanvas({
           ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
           ctx.fill();
         } else {
+          // Soul Strike Magic Missile
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = b.isCrit ? '#f59e0b' : '#38bdf8';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.isCrit ? 5.5 : 4, 0, Math.PI * 2);
+          ctx.fill();
+
           ctx.fillStyle = b.isCrit ? '#fbbf24' : (entities.isGatlingActive ? '#facc15' : '#38bdf8');
           ctx.beginPath();
-          ctx.arc(b.x, b.y, b.isCrit ? 6 : 4, 0, Math.PI * 2);
+          ctx.arc(b.x - b.vx * 0.006, b.y - b.vy * 0.006, b.isCrit ? 4 : 2.8, 0, Math.PI * 2);
           ctx.fill();
+          ctx.shadowBlur = 0;
         }
 
         for (let j = entities.enemies.length - 1; j >= 0; j--) {
@@ -1040,10 +1191,8 @@ export default function GameCanvas({
             const droneX = centerX + Math.cos(dAngle) * currentRadius;
             const droneY = centerY + Math.sin(dAngle) * currentRadius;
 
-            ctx.fillStyle = ring === 0 ? '#fbbf24' : '#c084fc';
-            ctx.beginPath();
-            ctx.arc(droneX, droneY, 7, 0, Math.PI * 2);
-            ctx.fill();
+            // วาดลูกแก้วมนตราบริวาร (Arcane Familiar Orb)
+            drawCombatFamiliar(ctx, droneX, droneY, 1.0);
 
             // รัศมีใบมีดตัด
             for (let j = entities.enemies.length - 1; j >= 0; j--) {
@@ -1075,13 +1224,8 @@ export default function GameCanvas({
           const ldX = centerX + Math.cos(ldAngle) * laserRadius;
           const ldY = centerY + Math.sin(ldAngle) * laserRadius;
 
-          ctx.fillStyle = '#38bdf8';
-          ctx.beginPath();
-          ctx.arc(ldX, ldY, 8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#e0f2fe';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
+          // วาดภูตสายฟ้าคริสตัล (Lightning Oculus)
+          drawLaserOculus(ctx, ldX, ldY, 1.0);
 
           // ยิงแสงเลเซอร์ใส่ศัตรูในระยะ 140px
           const laserInterval = Math.max(600, (1300 - laserDroneLvl * 100) * cooldownMult);
@@ -1160,13 +1304,8 @@ export default function GameCanvas({
         const repX = centerX + Math.cos(entities.repairDroneAngle) * repRadius;
         const repY = centerY + Math.sin(entities.repairDroneAngle) * repRadius;
 
-        ctx.fillStyle = '#22c55e';
-        ctx.beginPath();
-        ctx.arc(repX, repY, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#bbf7d0';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        // วาดแฟรี่ฮีลพยาบาล (Healing Fairy)
+        drawHealingFairy(ctx, repX, repY, 1.1);
 
         const repairInterval = Math.max(1200, 2500 * cooldownMult);
         if (entities.repairDroneTimer > repairInterval) {
@@ -1187,7 +1326,7 @@ export default function GameCanvas({
             entities.damageTexts.push({
               x: centerX,
               y: centerY - 28,
-              text: `+${healVal} HP 🩺`,
+              text: `+${healVal} HP 💚`,
               isCrit: false,
               alpha: 1.0,
               vy: -1.0,
@@ -1225,39 +1364,55 @@ export default function GameCanvas({
           e.y += Math.sin(angle) * e.speed * 0.016;
         }
 
-        if (e.frozenTimer > 0) {
-          ctx.fillStyle = '#38bdf8';
-        } else if (e.hitFlashTimer > 0) {
-          ctx.fillStyle = '#ffffff';
-          e.hitFlashTimer--;
-        } else if (e.isBoss) {
-          ctx.fillStyle = '#dc2626';
-        } else if (e.isMiniBoss) {
-          ctx.fillStyle = '#9333ea';
+        if (e.hitFlashTimer > 0) e.hitFlashTimer--;
+        if (e.poisonedTimer > 0) e.poisonedTimer--;
+
+        const bounceOffset = Math.abs(Math.sin(timestamp * 0.008 + e.x * 0.05)) * 3;
+        const isHit = e.hitFlashTimer > 0;
+        const isFrozen = e.frozenTimer > 0;
+        const isPoisoned = e.poisonedTimer > 0;
+
+        // วาดพิกเซลอาร์ตมอนสเตอร์ Ragnarok Online
+        if (e.monsterType === 'gtb') {
+          drawGTB(ctx, e.x, e.y, 1.3, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'baphomet') {
+          drawBaphomet(ctx, e.x, e.y, 1.2, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'angeling') {
+          drawPoring(ctx, e.x, e.y, 1.45, bounceOffset, { body: '#f472b6', shade: '#db2777', outline: '#be185d', wingColor: '#ffffff' }, true, false, true, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'deviling') {
+          drawPoring(ctx, e.x, e.y, 1.45, bounceOffset, { body: '#581c87', shade: '#3b0764', outline: '#2e1065', wingColor: '#3b0764' }, true, true, false, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'ghostring') {
+          drawPoring(ctx, e.x, e.y, 1.45, bounceOffset, { body: '#bae6fd', shade: '#7dd3fc', outline: '#38bdf8' }, false, false, false, isHit, isFrozen, isPoisoned, true);
+        } else if (e.monsterType === 'drops') {
+          drawPoring(ctx, e.x, e.y, 1.2, bounceOffset, { body: '#fb923c', shade: '#ea580c', outline: '#c2410c' }, false, false, false, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'poporing') {
+          drawPoring(ctx, e.x, e.y, 1.2, bounceOffset, { body: '#4ade80', shade: '#16a34a', outline: '#15803d' }, false, false, false, isHit, isFrozen, isPoisoned);
+        } else if (e.monsterType === 'marin') {
+          drawPoring(ctx, e.x, e.y, 1.2, bounceOffset, { body: '#38bdf8', shade: '#0284c7', outline: '#0369a1' }, false, false, false, isHit, isFrozen, isPoisoned);
         } else {
-          ctx.fillStyle = '#ef4444';
+          drawPoring(ctx, e.x, e.y, 1.2, bounceOffset, { body: '#f472b6', shade: '#db2777', outline: '#be185d' }, false, false, false, isHit, isFrozen, isPoisoned);
         }
 
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (e.isBoss) {
-          ctx.strokeStyle = '#f97316';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-        } else if (e.isMiniBoss) {
-          ctx.strokeStyle = '#c084fc';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-
-        const barWidth = e.isBoss ? 36 : (e.isMiniBoss ? 28 : 22);
+        // หลอดเลือด HP Bar
+        const barWidth = e.isBoss ? 40 : (e.isMiniBoss ? 30 : 24);
         const hpPercent = Math.max(0, e.hp / e.maxHp);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(e.x - barWidth / 2, e.y - e.radius - 8, barWidth, 4);
-        ctx.fillStyle = e.isBoss ? '#f59e0b' : (e.isMiniBoss ? '#a855f7' : '#22c55e');
-        ctx.fillRect(e.x - barWidth / 2, e.y - e.radius - 8, barWidth * hpPercent, 4);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(e.x - barWidth / 2, e.y - e.radius - 12, barWidth, 4);
+        ctx.fillStyle = e.isBoss ? '#f59e0b' : (e.isMiniBoss ? '#c084fc' : (isPoisoned ? '#4ade80' : '#22c55e'));
+        ctx.fillRect(e.x - barWidth / 2, e.y - e.radius - 12, barWidth * hpPercent, 4);
+
+        // ป้ายหัวบอส / มินิบอส
+        if (e.isBoss) {
+          ctx.font = 'bold 9px sans-serif';
+          ctx.fillStyle = '#fbbf24';
+          ctx.textAlign = 'center';
+          ctx.fillText('👑 MVP', e.x, e.y - e.radius - 15);
+        } else if (e.isMiniBoss) {
+          ctx.font = 'bold 9px sans-serif';
+          ctx.fillStyle = '#c084fc';
+          ctx.textAlign = 'center';
+          ctx.fillText('⭐ MINI', e.x, e.y - e.radius - 15);
+        }
 
         // ชนป้อม
         if (getDistance(e.x, e.y, centerX, centerY) < 26) {
@@ -1324,21 +1479,16 @@ export default function GameCanvas({
         if (dt.alpha <= 0) entities.damageTexts.splice(i, 1);
       }
 
-      // 12. วาดป้อมตรงกลาง
-      ctx.fillStyle = '#2563eb';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#60a5fa';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      // 12. วาดจอมเวท High Wizard ตรงกลาง (แทนป้อม)
+      const isCasting = (timestamp - entities.lastShotTime < 180);
+      drawHighWizard(ctx, centerX, centerY, 1.6, isCasting, entities.lastTargetAngle || 0);
 
       // วงแหวนออร่าสีทองขณะ Gatling Overdrive ทำงาน
       if (entities.isGatlingActive) {
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 3.5;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 25 + Math.sin(Date.now() * 0.02) * 3, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, 28 + Math.sin(timestamp * 0.02) * 3, 0, Math.PI * 2);
         ctx.stroke();
       }
 

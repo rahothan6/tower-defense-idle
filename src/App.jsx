@@ -239,9 +239,9 @@ export default function App() {
           overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '300px', marginTop: '12px', marginBottom: '20px' }}>
-            <div style={{ fontSize: '42px', marginBottom: '6px' }}>🏰</div>
-            <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>TOWER DEFENSE</h1>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>ป้องกันป้อมตรงกลางให้นานที่สุด</p>
+            <div style={{ fontSize: '42px', marginBottom: '6px' }}>🧙‍♂️</div>
+            <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>HIGH WIZARD DEFENSE</h1>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>ปกป้องจอมเวทตรงกลางให้นานที่สุด</p>
 
             <form onSubmit={handleStartGame} style={{ width: '100%' }}>
               <input

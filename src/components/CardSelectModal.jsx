@@ -64,24 +64,24 @@ const PASSIVE_AFFECTED_SKILLS = {
     { icon: '💥', name: 'Shrapnel' }
   ],
   regen_core: [
-    { icon: '🏰', name: 'Tower' },
-    { icon: '🔧', name: 'Repair' }
+    { icon: '🧙‍♂️', name: 'Wizard' },
+    { icon: '🧚', name: 'Fairy' }
   ],
   thorns: [
-    { icon: '🏰', name: 'Tower' },
+    { icon: '🧙‍♂️', name: 'Wizard' },
     { icon: '🛡️', name: 'Shield' }
   ],
   titan_plating: [
-    { icon: '🏰', name: 'Tower' }
+    { icon: '🧙‍♂️', name: 'Wizard' }
   ],
   shockwave: [
-    { icon: '🏰', name: 'Tower' },
+    { icon: '🧙‍♂️', name: 'Wizard' },
     { icon: '🛡️', name: 'Shield' }
   ],
   hive_overdrive: [
-    { icon: '🛰️', name: 'Drone' },
-    { icon: '🛸', name: 'Laser Drone' },
-    { icon: '🔧', name: 'Repair Drone' }
+    { icon: '🔮', name: 'Orb' },
+    { icon: '⚡', name: 'Laser Wisp' },
+    { icon: '🧚', name: 'Fairy' }
   ],
   drone_duplicator: [
     { icon: '🛰️', name: 'Drone' },
