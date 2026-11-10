@@ -7,6 +7,7 @@ import LeaderboardModal from './components/LeaderboardModal';
 import CardSelectModal from './components/CardSelectModal';
 import InventoryBar from './components/InventoryBar';
 import { TRANSLATIONS } from './data/translations';
+import { GAME_VERSION } from './config/version';
 
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('idle_game_lang') || 'th');
@@ -457,6 +458,23 @@ export default function App() {
           )}
         </>
       )}
+
+      {/* Version Tag */}
+      <div style={{
+        position: 'absolute',
+        bottom: '6px',
+        right: '10px',
+        fontSize: '10px',
+        fontFamily: 'monospace',
+        color: '#64748b',
+        letterSpacing: '0.5px',
+        pointerEvents: 'none',
+        zIndex: 50,
+        userSelect: 'none',
+        opacity: 0.75
+      }}>
+        {GAME_VERSION}
+      </div>
     </div>
   );
 }
