@@ -333,7 +333,7 @@ export const CARDS_DATABASE = [
     color: '#f43f5e',
     getDesc: (lvl, lang = 'th') => {
       const chance = (lvl + 1) * 10;
-      const critBonus = 20 + (lvl * 10);
+      const critBonus = Math.min(50, 20 + (lvl * 10));
       if (lang === 'en') {
         return lvl === 0
           ? `Crit chance +${chance}% and Crit damage +${critBonus}%`
@@ -352,14 +352,15 @@ export const CARDS_DATABASE = [
     icon: '🌀',
     color: '#8b5cf6',
     getDesc: (lvl, lang = 'th') => {
+      const bonus = Math.min(50, (lvl + 1) * 10);
       if (lang === 'en') {
         return lvl === 0
-          ? 'Chain hits and shrapnels deal +25% bonus damage per bounce'
-          : `Increases chain bonus damage to +${(lvl + 1) * 25}% per bounce`;
+          ? 'Chain hits deal +10% bonus dmg (capped at max +50% of ATK)'
+          : `Increases chain bonus damage to +${bonus}% (capped at max +50% of ATK)`;
       }
       return lvl === 0
-        ? 'การโจมตีต่อเนื่องหรือแตกตัวแรงขึ้น +25% ต่อทอด'
-        : `โบนัสดาเมจโจมตีต่อเนื่องเพิ่มขึ้นเป็น +${(lvl + 1) * 25}% ต่อทอด`;
+        ? 'การโจมตีต่อเนื่องหรือแตกตัวแรงขึ้น +10% ต่อทอด (เพิ่มสูงสุดไม่เกิน 50% ของพลังโจมตี)'
+        : `โบนัสดาเมจโจมตีต่อเนื่องเพิ่มขึ้นเป็น +${bonus}% (เพิ่มสูงสุดไม่เกิน 50% ของพลังโจมตี)`;
     }
   },
   {
@@ -372,12 +373,12 @@ export const CARDS_DATABASE = [
     getDesc: (lvl, lang = 'th') => {
       if (lang === 'en') {
         return lvl === 0
-          ? 'Bullets knock back monsters upon impact'
-          : `Increases knockback force by +${(lvl + 1) * 35}%`;
+          ? 'Bullets knock back normal monsters upon impact (Boss & Mini-Boss immune)'
+          : `Increases knockback force by +${(lvl + 1) * 35}% (Boss & Mini-Boss immune)`;
       }
       return lvl === 0
-        ? 'กระสุนมีแรงผลักมอนสเตอร์ให้ถอยหลังกลับไปเมื่อโดนยิง'
-        : `แรงผลักกระแทกแรงขึ้น +${(lvl + 1) * 35}%`;
+        ? 'กระสุนมีแรงผลักมอนสเตอร์ทั่วไปให้ถอยหลัง (บอสและมินิบอสไม่โดนผลัก)'
+        : `แรงผลักกระแทกแรงขึ้น +${(lvl + 1) * 35}% (บอสและมินิบอสไม่โดนผลัก)`;
     }
   },
   {
@@ -388,14 +389,15 @@ export const CARDS_DATABASE = [
     icon: '🔥',
     color: '#10b981',
     getDesc: (lvl, lang = 'th') => {
+      const rate = (lvl + 1) * 10;
       if (lang === 'en') {
         return lvl === 0
-          ? 'Permanently increases fire rate by +25% and accelerates bullet velocity'
-          : `Increases fire rate to +${(lvl + 1) * 25}%`;
+          ? `Permanently increases fire rate by +${rate}% and accelerates bullet velocity`
+          : `Increases fire rate to +${rate}%`;
       }
       return lvl === 0
-        ? 'ความเร็วการยิงถาวร +25% และกระสุนพุ่งเร็วขึ้น'
-        : `ความเร็วการยิงเพิ่มขึ้นเป็น +${(lvl + 1) * 25}%`;
+        ? `ความเร็วการยิงถาวร +${rate}% และกระสุนพุ่งเร็วขึ้น`
+        : `ความเร็วการยิงเพิ่มขึ้นเป็น +${rate}%`;
     }
   },
 

@@ -206,18 +206,20 @@ export default function GameCanvas({
       const deadlyOpticLvl = currentSkills.deadly_optic || 0;
       const critChance = 0.15 + (deadlyOpticLvl * 0.10); // Base 15% + 10% ต่อเลเวล
       const baseCritDamage = 1.5;
-      const critDamageBonus = deadlyOpticLvl > 0 ? (0.20 + (deadlyOpticLvl - 1) * 0.10) : 0;
+      const critDamageBonus = deadlyOpticLvl > 0 ? Math.min(0.50, 0.20 + (deadlyOpticLvl - 1) * 0.10) : 0;
       const critDamageMult = baseCritDamage + critDamageBonus;
 
       const kineticLvl = currentSkills.kinetic_accel || 0;
-      const kineticMult = 1 + (kineticLvl * 0.25); // บัฟดาเมจ +25% ต่อนัดชิ่ง/สะเก็ด
+      // บัฟดาเมจ Kinetic Accel เริ่ม 10% + 10% ต่อเลเวล โบนัสเพิ่มได้มากสุดไม่เกิน 50% ของพลังโจมตี
+      const kineticBonusPercent = Math.min(0.50, kineticLvl * 0.10);
+      const kineticMult = 1 + kineticBonusPercent;
 
       const heavyCaliberLvl = currentSkills.heavy_caliber || 0;
       const knockbackForce = heavyCaliberLvl > 0 ? (6 + heavyCaliberLvl * 2.5) : 0;
 
       const overclockLvl = currentSkills.overclock_barrel || 0;
-      const attackSpeedMult = 1 + (overclockLvl * 0.25);
-      const bulletSpeed = 500 * (1 + overclockLvl * 0.20);
+      const attackSpeedMult = 1 + (overclockLvl * 0.10); // เริ่มต้น +10% และ +10% ต่อเลเวล
+      const bulletSpeed = 500 * (1 + overclockLvl * 0.15);
       const bounceCount = currentSkills.bouncing || 0;
 
       // ระบบ GATLING OVERDRIVE
@@ -293,10 +295,13 @@ export default function GameCanvas({
           const shockDamage = currentStats.damage * (1.5 + shockwaveLvl * 0.8);
           for (let j = entities.enemies.length - 1; j >= 0; j--) {
             const e = entities.enemies[j];
-            const pushAngle = getAngle(centerX, centerY, e.x, e.y);
-            const pushDist = e.isBoss ? 45 : (e.isMiniBoss ? 80 : 160);
-            e.x += Math.cos(pushAngle) * pushDist;
-            e.y += Math.sin(pushAngle) * pushDist;
+            // ผลักเฉพาะมอนสเตอร์ทั่วไป (บอสและมินิบอสไม่โดนผลัก)
+            if (!e.isBoss && !e.isMiniBoss) {
+              const pushAngle = getAngle(centerX, centerY, e.x, e.y);
+              const pushDist = 160;
+              e.x += Math.cos(pushAngle) * pushDist;
+              e.y += Math.sin(pushAngle) * pushDist;
+            }
             e.hp -= shockDamage;
             e.hitFlashTimer = 5;
 
@@ -577,9 +582,11 @@ export default function GameCanvas({
               if (getDistance(shieldX, shieldY, e.x, e.y) < e.radius + 12) {
                 e.hp -= currentStats.damage * 0.8 * spellDamageMult;
                 e.hitFlashTimer = 3;
-                const pushAngle = getAngle(centerX, centerY, e.x, e.y);
-                e.x += Math.cos(pushAngle) * 30;
-                e.y += Math.sin(pushAngle) * 30;
+                if (!e.isBoss && !e.isMiniBoss) {
+                  const pushAngle = getAngle(centerX, centerY, e.x, e.y);
+                  e.x += Math.cos(pushAngle) * 30;
+                  e.y += Math.sin(pushAngle) * 30;
+                }
 
                 if (e.hp <= 0) {
                   entities.enemies.splice(j, 1);
@@ -981,6 +988,7 @@ export default function GameCanvas({
             vx: Math.cos(angle) * bulletSpeed,
             vy: Math.sin(angle) * bulletSpeed,
             damage: actualBulletDmg,
+            baseDamage: actualBulletDmg,
             isCrit,
             bouncesLeft: bounceCount,
             isShrapnel: false
@@ -1021,10 +1029,10 @@ export default function GameCanvas({
             e.hp -= b.damage;
             e.hitFlashTimer = 4;
 
-            // ผลักศัตรูถอยหลัง (Heavy Caliber)
-            if (knockbackForce > 0) {
+            // ผลักศัตรูถอยหลัง (Heavy Caliber - บอสและมินิบอสไม่โดนผลัก)
+            if (knockbackForce > 0 && !e.isBoss && !e.isMiniBoss) {
               const pushAngle = getAngle(centerX, centerY, e.x, e.y);
-              const pushDist = (e.isBoss ? 2 : (e.isMiniBoss ? 4 : knockbackForce));
+              const pushDist = knockbackForce;
               e.x += Math.cos(pushAngle) * pushDist;
               e.y += Math.sin(pushAngle) * pushDist;
             }
@@ -1043,7 +1051,8 @@ export default function GameCanvas({
             const shrapnelLvl = currentSkills.shrapnel || 0;
             if (!b.isShrapnel && shrapnelLvl > 0) {
               const shrapnelCount = 4 + (shrapnelLvl * 2);
-              const shrapnelDmg = b.damage * (0.35 + shrapnelLvl * 0.10) * (kineticLvl > 0 ? kineticMult : 1);
+              const shrapnelBase = b.damage * (0.35 + shrapnelLvl * 0.10);
+              const shrapnelDmg = Math.min(currentStats.damage * 1.5, shrapnelBase * (kineticLvl > 0 ? kineticMult : 1));
               for (let s = 0; s < shrapnelCount; s++) {
                 const sAngle = (Math.PI * 2 / shrapnelCount) * s + (Math.random() * 0.3 - 0.15);
                 entities.bullets.push({
@@ -1052,6 +1061,7 @@ export default function GameCanvas({
                   vx: Math.cos(sAngle) * 420,
                   vy: Math.sin(sAngle) * 420,
                   damage: shrapnelDmg,
+                  baseDamage: shrapnelDmg,
                   isCrit: false,
                   bouncesLeft: Math.min(1, bounceCount),
                   isShrapnel: true
@@ -1075,9 +1085,10 @@ export default function GameCanvas({
               }
 
               if (nextTarget) {
-                // บัฟดาเมจชิ่งจาก Kinetic Accel
+                // บัฟดาเมจชิ่งจาก Kinetic Accel (เพิ่มได้มากสุดไม่เกิน 50% ของพลังโจมตี)
                 if (kineticLvl > 0) {
-                  b.damage *= kineticMult;
+                  const maxAllowed = (b.baseDamage || currentStats.damage) + (currentStats.damage * 0.50);
+                  b.damage = Math.min(maxAllowed, b.damage * kineticMult);
                 }
 
                 entities.lightningBeams.push({
