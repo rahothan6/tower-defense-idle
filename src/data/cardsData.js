@@ -16,15 +16,16 @@ export const CARDS_DATABASE = [
     icon: '🏹',
     color: '#38bdf8',
     getDesc: (lvl, lang = 'th') => {
-      const nextBullets = Math.min(4, lvl + 2);
       const nextDmg = 50 + (lvl * 10);
       if (lang === 'en') {
-        if (lvl === 0) return 'Fires 2 arrows simultaneously (50% dmg each)';
-        if (lvl < 3) return `Increases to ${nextBullets} arrows (${nextDmg}% dmg each)`;
+        if (lvl === 0) return 'Fires 2 arrows simultaneously (50% dmg each | Max 4 arrows)';
+        if (lvl === 1) return 'Increases to 3 arrows (60% dmg each | Max 4 arrows)';
+        if (lvl === 2) return 'Increases to 4 arrows (70% dmg each | Max arrows reached)';
         return `Capped at 4 arrows (increases dmg to ${nextDmg}% each)`;
       }
-      if (lvl === 0) return 'ยิงกระสุน 2 นัดพร้อมกัน (ดาเมจต่อนัด 50%)';
-      if (lvl < 3) return `เพิ่มกระสุนเป็น ${nextBullets} นัด (ดาเมจต่อนัด ${nextDmg}%)`;
+      if (lvl === 0) return 'ยิงกระสุน 2 นัดพร้อมกัน (ดาเมจต่อนัด 50% | จำกัดสูงสุด 4 นัด)';
+      if (lvl === 1) return 'เพิ่มกระสุนเป็น 3 นัด (ดาเมจต่อนัด 60% | จำกัดสูงสุด 4 นัด)';
+      if (lvl === 2) return 'เพิ่มกระสุนเป็น 4 นัด (ดาเมจต่อนัด 70% | ถึงลิมิตสูงสุดแล้ว)';
       return `จำกัดสูงสุด 4 นัด (เพิ่มดาเมจต่อนัดเป็น ${nextDmg}%)`;
     }
   },
