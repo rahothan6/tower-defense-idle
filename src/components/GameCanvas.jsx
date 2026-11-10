@@ -216,6 +216,7 @@ export default function GameCanvas({
       const overclockLvl = currentSkills.overclock_barrel || 0;
       const attackSpeedMult = 1 + (overclockLvl * 0.25);
       const bulletSpeed = 500 * (1 + overclockLvl * 0.20);
+      const bounceCount = currentSkills.bouncing || 0;
 
       // ระบบ GATLING OVERDRIVE
       const gatlingLvl = currentSkills.gatling || 0;
@@ -957,7 +958,6 @@ export default function GameCanvas({
         const isCrit = Math.random() < critChance;
         const actualDamage = isCrit ? currentStats.damage * critDamageMult : currentStats.damage;
 
-        const bounceCount = currentSkills.bouncing || 0;
         const multishotLevel = currentSkills.multishot || 0;
         const bulletCount = multishotLevel > 0 ? multishotLevel + 1 : 1;
 
