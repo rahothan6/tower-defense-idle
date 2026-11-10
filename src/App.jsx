@@ -238,51 +238,60 @@ export default function App() {
           boxSizing: 'border-box',
           overflowY: 'auto'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '300px', marginTop: '12px', marginBottom: '20px' }}>
-            <div style={{ fontSize: '42px', marginBottom: '6px' }}>🧙‍♂️</div>
-            <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>HIGH WIZARD DEFENSE</h1>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>ปกป้องจอมเวทตรงกลางให้นานที่สุด</p>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '340px',
+            margin: 'auto 0'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '300px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '42px', marginBottom: '6px' }}>🧙‍♂️</div>
+              <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>HIGH WIZARD DEFENSE</h1>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>ปกป้องจอมเวทตรงกลางให้นานที่สุด</p>
 
-            <form onSubmit={handleStartGame} style={{ width: '100%' }}>
-              <input
-                type="text"
-                maxLength={15}
-                placeholder="ใส่ชื่อของคุณ..."
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '14px', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
-              />
-              <button
-                type="submit"
-                disabled={!playerName.trim()}
-                style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: playerName.trim() ? '#2563eb' : '#334155', color: '#ffffff', fontWeight: 'bold', fontSize: '14px', cursor: playerName.trim() ? 'pointer' : 'not-allowed' }}
-              >
-                เริ่มเล่นเกม ⚔️
-              </button>
-            </form>
-          </div>
-
-          <div style={{ width: '100%', maxWidth: '340px', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px 14px', boxSizing: 'border-box', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>🏆 TOP 10 อันดับรอดชีวิต</span>
-              <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold' }}>สถิติคุณ: Wave {personalBest}</span>
+              <form onSubmit={handleStartGame} style={{ width: '100%' }}>
+                <input
+                  type="text"
+                  maxLength={15}
+                  placeholder="ใส่ชื่อของคุณ..."
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '14px', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
+                />
+                <button
+                  type="submit"
+                  disabled={!playerName.trim()}
+                  style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: playerName.trim() ? '#2563eb' : '#334155', color: '#ffffff', fontWeight: 'bold', fontSize: '14px', cursor: playerName.trim() ? 'pointer' : 'not-allowed' }}
+                >
+                  เริ่มเล่นเกม ⚔️
+                </button>
+              </form>
             </div>
-            <div>
-              {loadingLeaders ? (
-                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>กำลังโหลด...</div>
-              ) : leaders.length === 0 ? (
-                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>ยังไม่มีข้อมูลคะแนน</div>
-              ) : (
-                leaders.map((lead, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px', borderBottom: idx === leaders.length - 1 ? 'none' : '1px solid rgba(30, 41, 59, 0.5)', fontSize: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ width: '22px', fontSize: idx < 3 ? '13px' : '11px', color: '#64748b' }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}</span>
-                      <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{lead.name}</span>
+
+            <div style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px 14px', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>🏆 TOP 10 อันดับรอดชีวิต</span>
+                <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold' }}>สถิติคุณ: Wave {personalBest}</span>
+              </div>
+              <div>
+                {loadingLeaders ? (
+                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>กำลังโหลด...</div>
+                ) : leaders.length === 0 ? (
+                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>ยังไม่มีข้อมูลคะแนน</div>
+                ) : (
+                  leaders.map((lead, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px', borderBottom: idx === leaders.length - 1 ? 'none' : '1px solid rgba(30, 41, 59, 0.5)', fontSize: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ width: '22px', fontSize: idx < 3 ? '13px' : '11px', color: '#64748b' }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}</span>
+                        <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{lead.name}</span>
+                      </div>
+                      <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>Wave {lead.wave}</span>
                     </div>
-                    <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>Wave {lead.wave}</span>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
