@@ -471,10 +471,16 @@ export default function GameCanvas({
           
           for (let pCount = 0; pCount < totalPuddles; pCount++) {
             const puddleAngle = Math.random() * Math.PI * 2;
-            const puddleDist = 40 + Math.random() * 90;
+            // สุ่มเกิดทั่ววงระยะโจมตี (Attack Range) กระจายพื้นที่ทั่วทั้งวง
+            const minRadius = 35;
+            const maxRadius = Math.max(minRadius + 60, currentStats.range - 20);
+            const puddleDist = minRadius + Math.sqrt(Math.random()) * (maxRadius - minRadius);
+            const targetX = Math.max(30, Math.min(canvas.width - 30, centerX + Math.cos(puddleAngle) * puddleDist));
+            const targetY = Math.max(30, Math.min(canvas.height - 30, centerY + Math.sin(puddleAngle) * puddleDist));
+
             entities.poisonPuddles.push({
-              x: centerX + Math.cos(puddleAngle) * puddleDist,
-              y: centerY + Math.sin(puddleAngle) * puddleDist,
+              x: targetX,
+              y: targetY,
               radius: (28 + poisonLvl * 4) * areaMult,
               duration: 4000 * durationMult,
               damagePerTick: currentStats.damage * (0.35 + poisonLvl * 0.15) * spellDamageMult,
