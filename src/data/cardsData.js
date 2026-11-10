@@ -277,14 +277,15 @@ export const CARDS_DATABASE = [
     icon: '💥',
     color: '#f97316',
     getDesc: (lvl, lang = 'th') => {
+      const dmg = 50 + (lvl * 10);
       if (lang === 'en') {
         return lvl === 0
-          ? 'Bullets shatter into 4 explosive shrapnels upon target impact'
-          : `Increases shrapnels to ${(lvl + 1) * 2 + 4} pellets with higher damage`;
+          ? 'Bullets shatter into 4 shrapnels on impact (50% dmg each)'
+          : `Capped at 4 shrapnels (increases shrapnel dmg to ${dmg}%)`;
       }
       return lvl === 0
-        ? 'เมื่อกระสุนโดนเป้าหมาย แตกเป็นสะเก็ด 4 เม็ดกระจายรอบตัว'
-        : `เพิ่มจำนวนสะเก็ดเป็น ${(lvl + 1) * 2 + 4} เม็ด และแรงขึ้น`;
+        ? 'เมื่อกระสุนโดนเป้าหมาย แตกเป็นสะเก็ด 4 เม็ด (ดาเมจต่อนัด 50%)'
+        : `จำกัดสูงสุด 4 เม็ด (เพิ่มดาเมจสะเก็ดเป็น ${dmg}%)`;
     }
   },
   {

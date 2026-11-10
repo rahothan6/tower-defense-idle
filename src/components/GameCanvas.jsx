@@ -1047,11 +1047,12 @@ export default function GameCanvas({
               color: b.isShrapnel ? '#fb923c' : (b.isCrit ? '#f59e0b' : '#f8fafc')
             });
 
-            // ปล่อยสะเก็ดระเบิด (Shrapnel Round)
+            // ปล่อยสะเก็ดระเบิด (Shrapnel Round - จำกัดแค่ 4 เม็ด ดาเมจ 50% + 10% ต่อเวล)
             const shrapnelLvl = currentSkills.shrapnel || 0;
             if (!b.isShrapnel && shrapnelLvl > 0) {
-              const shrapnelCount = 4 + (shrapnelLvl * 2);
-              const shrapnelBase = b.damage * (0.35 + shrapnelLvl * 0.10);
+              const shrapnelCount = 4;
+              const shrapnelDmgMult = Math.min(1.0, 0.50 + (shrapnelLvl - 1) * 0.10);
+              const shrapnelBase = b.damage * shrapnelDmgMult;
               const shrapnelDmg = Math.min(currentStats.damage * 1.5, shrapnelBase * (kineticLvl > 0 ? kineticMult : 1));
               for (let s = 0; s < shrapnelCount; s++) {
                 const sAngle = (Math.PI * 2 / shrapnelCount) * s + (Math.random() * 0.3 - 0.15);
