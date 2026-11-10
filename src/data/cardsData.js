@@ -55,14 +55,15 @@ export const CARDS_DATABASE = [
     icon: '🔮',
     color: '#fbbf24',
     getDesc: (lvl, lang = 'th') => {
+      const dmg = 70 + (lvl * 10);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Summons 1 magic orb orbiting the wizard to damage enemies' 
-          : `Adds 1 additional magic orb (total ${lvl + 1} orbs)`;
+          ? 'Summons 1 magic orb orbiting the wizard (70% contact dmg)' 
+          : `Adds 1 magic orb (total ${lvl + 1} orbs | ${dmg}% contact dmg)`;
       }
       return lvl === 0 
-        ? 'เรียกลูกแก้วมนตรา 1 ลูก บินวนรอบจอมเวทชนศัตรู' 
-        : `เพิ่มลูกแก้วอีก 1 ลูก (รวมเป็น ${lvl + 1} ลูก)`;
+        ? 'เรียกลูกแก้วมนตรา 1 ลูก บินวนรอบจอมเวท (ดาเมจชน 70%)' 
+        : `เพิ่มลูกแก้วอีก 1 ลูก (รวมเป็น ${lvl + 1} ลูก | ดาเมจชน ${dmg}%)`;
     }
   },
   {
@@ -73,14 +74,15 @@ export const CARDS_DATABASE = [
     icon: '🧪',
     color: '#22c55e',
     getDesc: (lvl, lang = 'th') => {
+      const dmg = 150 + (lvl * 20);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Spawns a venom puddle dealing continuous damage for 4s' 
-          : `Poison dmg +50% and spawns ${lvl + 1} puddles simultaneously`;
+          ? 'Spawns a venom puddle dealing 150%/s continuous damage for 4s' 
+          : `Increases poison damage to ${dmg}%/s and spawns ${lvl + 1} puddles`;
       }
       return lvl === 0 
-        ? 'สุ่มเกิดบ่อพิษเดือดบนพื้น สร้างดาเมจต่อเนื่อง 4 วิ' 
-        : `ดาเมจพิษแรงขึ้น +50% และเกิดพร้อมกัน ${lvl + 1} บ่อ`;
+        ? 'สุ่มเกิดบ่อพิษเดือด สร้างดาเมจต่อเนื่อง 150%/วินาที นาน 4 วิ' 
+        : `ดาเมจพิษแรงขึ้นเป็น ${dmg}%/วินาที และเกิดพร้อมกัน ${lvl + 1} บ่อ`;
     }
   },
   {

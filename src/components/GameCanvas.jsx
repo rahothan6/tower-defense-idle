@@ -488,7 +488,7 @@ export default function GameCanvas({
               y: targetY,
               radius: (28 + poisonLvl * 4) * areaMult,
               duration: 4000 * durationMult,
-              damagePerTick: currentStats.damage * (0.35 + poisonLvl * 0.15) * spellDamageMult,
+              damagePerTick: currentStats.damage * (1.30 + poisonLvl * 0.20) * spellDamageMult,
               bubbles: [
                 { ox: -12, oy: -6, size: 4, speed: 0.006, phase: 0 },
                 { ox: 10, oy: 8, size: 5, speed: 0.005, phase: 2 },
@@ -1220,7 +1220,7 @@ export default function GameCanvas({
             for (let j = entities.enemies.length - 1; j >= 0; j--) {
               const e = entities.enemies[j];
               if (getDistance(droneX, droneY, e.x, e.y) < e.radius + 8) {
-                const contactDmg = currentStats.damage * (0.4 + droneCount * 0.08) * droneDmgMult * ringDmgBonus;
+                const contactDmg = currentStats.damage * (0.60 + droneCount * 0.10) * droneDmgMult * ringDmgBonus;
                 e.hp -= contactDmg;
                 e.hitFlashTimer = 2;
                 if (e.hp <= 0) {
