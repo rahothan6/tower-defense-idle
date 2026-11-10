@@ -6,39 +6,39 @@ const PASSIVE_AFFECTED_SKILLS = {
   area_expansion: [
     { icon: '☄️', name: 'Meteor' },
     { icon: '❄️', name: 'Frost Nova' },
-    { icon: '☠️', name: 'Poison' },
-    { icon: '🛰️', name: 'Drone' },
+    { icon: '🧪', name: 'Poison' },
+    { icon: '🔮', name: 'Orb Drone' },
     { icon: '🛡️', name: 'Shield' },
     { icon: '⚡', name: 'Railgun' }
   ],
   time_extension: [
     { icon: '❄️', name: 'Frost Nova' },
-    { icon: '☠️', name: 'Poison' },
+    { icon: '🧪', name: 'Poison' },
     { icon: '🔫', name: 'Gatling' }
   ],
   cooldown_reduct: [
     { icon: '☄️', name: 'Meteor' },
     { icon: '❄️', name: 'Frost Nova' },
-    { icon: '☠️', name: 'Poison' },
+    { icon: '🧪', name: 'Poison' },
     { icon: '⚡', name: 'Railgun' },
     { icon: '🔭', name: 'Sniper' },
     { icon: '🔫', name: 'Gatling' }
   ],
   duplicate_cast: [
     { icon: '☄️', name: 'Meteor' },
-    { icon: '☠️', name: 'Poison' },
+    { icon: '🧪', name: 'Poison' },
     { icon: '🛡️', name: 'Shield' }
   ],
   spell_amp: [
     { icon: '☄️', name: 'Meteor' },
     { icon: '❄️', name: 'Frost Nova' },
-    { icon: '☠️', name: 'Poison' },
+    { icon: '🧪', name: 'Poison' },
     { icon: '🛡️', name: 'Shield' }
   ],
   vampiric: [
     { icon: '🏹', name: 'Multishot' },
     { icon: '💫', name: 'Bounce' },
-    { icon: '🛰️', name: 'Drone' },
+    { icon: '🔮', name: 'Orb Drone' },
     { icon: '💥', name: 'Shrapnel' },
     { icon: '🔫', name: 'Gatling' }
   ],
@@ -65,7 +65,7 @@ const PASSIVE_AFFECTED_SKILLS = {
   ],
   regen_core: [
     { icon: '🧙‍♂️', name: 'Wizard' },
-    { icon: '🧚', name: 'Fairy' }
+    { icon: '🧚', name: 'Repair Fairy' }
   ],
   thorns: [
     { icon: '🧙‍♂️', name: 'Wizard' },
@@ -79,13 +79,13 @@ const PASSIVE_AFFECTED_SKILLS = {
     { icon: '🛡️', name: 'Shield' }
   ],
   hive_overdrive: [
-    { icon: '🔮', name: 'Orb' },
-    { icon: '⚡', name: 'Laser Wisp' },
-    { icon: '🧚', name: 'Fairy' }
+    { icon: '🔮', name: 'Orb Drone' },
+    { icon: '💠', name: 'Laser Drone' },
+    { icon: '🧚', name: 'Repair Fairy' }
   ],
   drone_duplicator: [
-    { icon: '🛰️', name: 'Drone' },
-    { icon: '🛸', name: 'Laser Drone' }
+    { icon: '🔮', name: 'Orb Drone' },
+    { icon: '💠', name: 'Laser Drone' }
   ]
 };
 

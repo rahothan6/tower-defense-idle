@@ -138,7 +138,7 @@ export const CARDS_DATABASE = [
     type: CARD_TYPES.PASSIVE,
     name: 'Arcane Relic',
     subName: 'ศาสตร์เวทระเบิดซาก',
-    icon: '🔮',
+    icon: '📖',
     color: '#8b5cf6',
     getDesc: (lvl) => lvl === 0 
       ? 'สกิลเวทแรงขึ้น +35% และศัตรูที่ตายจากเวทจะระเบิดกระจาย' 
@@ -254,7 +254,7 @@ export const CARDS_DATABASE = [
     type: CARD_TYPES.ACTIVE,
     name: 'Laser Drone',
     subName: 'ภูตสายฟ้าเลเซอร์',
-    icon: '⚡',
+    icon: '💠',
     color: '#38bdf8',
     getDesc: (lvl) => lvl === 0
       ? 'เรียกภูตสายฟ้า 1 ตน บินวนคอยยิงเลเซอร์ใส่ศัตรู'
