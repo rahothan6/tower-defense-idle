@@ -15,9 +15,13 @@ export const CARDS_DATABASE = [
     subName: 'ลูกปรายสาดรอบทิศ',
     icon: '🏹',
     color: '#38bdf8',
-    getDesc: (lvl) => lvl === 0 
-      ? 'ยิงกระสุนออก 2 นัดพร้อมกันมุมกว้าง' 
-      : `เพิ่มกระสุนเป็น ${lvl + 2} นัดพร้อมกัน`
+    getDesc: (lvl) => {
+      const nextBullets = Math.min(4, lvl + 2);
+      const nextDmg = 50 + (lvl * 10);
+      if (lvl === 0) return 'ยิงกระสุน 2 นัดพร้อมกัน (ดาเมจต่อนัด 50%)';
+      if (lvl < 3) return `เพิ่มกระสุนเป็น ${nextBullets} นัด (ดาเมจต่อนัด ${nextDmg}%)`;
+      return `จำกัดสูงสุด 4 นัด (เพิ่มดาเมจต่อนัดเป็น ${nextDmg}%)`;
+    }
   },
   {
     id: 'bouncing',
@@ -210,9 +214,13 @@ export const CARDS_DATABASE = [
     subName: 'เลนส์จุดตาย',
     icon: '🎯',
     color: '#f43f5e',
-    getDesc: (lvl) => lvl === 0
-      ? 'โอกาสคริติคอล +15% และดาเมจคริติคอลแรงขึ้น +50%'
-      : `โอกาสคริติคอล +${(lvl + 1) * 15}% และคริแรงขึ้น +${(lvl + 1) * 50}%`
+    getDesc: (lvl) => {
+      const chance = (lvl + 1) * 10;
+      const critBonus = 20 + (lvl * 10);
+      return lvl === 0
+        ? `โอกาสคริติคอล +${chance}% และคริแรงขึ้น +${critBonus}%`
+        : `โอกาสคริติคอลเป็น +${chance}% และคริแรงขึ้นเป็น +${critBonus}%`;
+    }
   },
   {
     id: 'kinetic_accel',

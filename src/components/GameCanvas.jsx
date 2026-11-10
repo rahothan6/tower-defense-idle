@@ -204,8 +204,10 @@ export default function GameCanvas({
 
       // ตัวคูณจาก Shooting Passive Cards
       const deadlyOpticLvl = currentSkills.deadly_optic || 0;
-      const critChance = 0.20 + (deadlyOpticLvl * 0.15); // Base 20% + 15% ต่อเลเวล
-      const critDamageMult = 2.0 + (deadlyOpticLvl * 0.50); // Base 2x + 0.5x ต่อเลเวล
+      const critChance = 0.15 + (deadlyOpticLvl * 0.10); // Base 15% + 10% ต่อเลเวล
+      const baseCritDamage = 1.5;
+      const critDamageBonus = deadlyOpticLvl > 0 ? (0.20 + (deadlyOpticLvl - 1) * 0.10) : 0;
+      const critDamageMult = baseCritDamage + critDamageBonus;
 
       const kineticLvl = currentSkills.kinetic_accel || 0;
       const kineticMult = 1 + (kineticLvl * 0.25); // บัฟดาเมจ +25% ต่อนัดชิ่ง/สะเก็ด
@@ -959,7 +961,9 @@ export default function GameCanvas({
         const actualDamage = isCrit ? currentStats.damage * critDamageMult : currentStats.damage;
 
         const multishotLevel = currentSkills.multishot || 0;
-        const bulletCount = multishotLevel > 0 ? multishotLevel + 1 : 1;
+        const bulletCount = multishotLevel > 0 ? Math.min(4, multishotLevel + 1) : 1;
+        const multishotDmgMult = multishotLevel > 0 ? Math.min(1.0, 0.50 + (multishotLevel - 1) * 0.10) : 1.0;
+        const actualBulletDmg = actualDamage * multishotDmgMult;
 
         const spread = 0.14;
         const startAngle = baseAngle - ((bulletCount - 1) * spread) / 2;
@@ -970,7 +974,7 @@ export default function GameCanvas({
             y: centerY,
             vx: Math.cos(angle) * bulletSpeed,
             vy: Math.sin(angle) * bulletSpeed,
-            damage: actualDamage,
+            damage: actualBulletDmg,
             isCrit,
             bouncesLeft: bounceCount,
             isShrapnel: false
