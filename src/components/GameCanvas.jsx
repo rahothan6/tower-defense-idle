@@ -16,6 +16,15 @@ function drawLightning(ctx, x1, y1, x2, y2, segments = 5, offset = 12) {
   ctx.lineTo(x2, y2);
 }
 
+// คำนวณระยะห่างระหว่างจุดกับเส้นตรง (สำหรับลำแสง Railgun)
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+  if (l2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+}
+
 export default function GameCanvas({ 
   towerStats, 
   wave, 
@@ -46,8 +55,24 @@ export default function GameCanvas({
     isShieldActive: true,
     lastShotTime: 0,
     poisonSpawnTimer: 0,
-    spawnTimer: 0,
-    lastTriggeredWave: 0
+    spawnTimer: 1000,
+    lastTriggeredWave: 0,
+    railgunTimer: 0,
+    railgunBeams: [],
+    sniperTimer: 0,
+    sniperTracers: [],
+    gatlingTimer: 0,
+    gatlingDurationTimer: 0,
+    isGatlingActive: false,
+    regenTimer: 0,
+    shockwaveCooldownTimer: 0,
+    shockwaveWave: null,
+    laserDroneAngle: 0,
+    laserDroneTimer: 0,
+    laserDroneBeams: [],
+    repairDroneAngle: 0,
+    repairDroneTimer: 0,
+    repairBeams: []
   });
 
   const towerStatsRef = useRef(towerStats);
@@ -55,11 +80,31 @@ export default function GameCanvas({
   const skillsRef = useRef(skills);
   const isPausedRef = useRef(isPaused);
 
+  const callbacksRef = useRef({
+    onGameOver,
+    onEnemyKilled,
+    onTowerDamaged,
+    onTriggerCardPick
+  });
+
+  useEffect(() => {
+    callbacksRef.current = {
+      onGameOver,
+      onEnemyKilled,
+      onTowerDamaged,
+      onTriggerCardPick
+    };
+  });
+
   useEffect(() => {
     towerStatsRef.current = towerStats;
     waveRef.current = wave;
     skillsRef.current = skills;
     isPausedRef.current = isPaused;
+    // ซิงค์เลือดป้อมหากมีการฟื้นฟูเลือด (Vampiric Core) หรืออัปเกรด Max HP จากภายนอก
+    if (towerStats.hp > gameEntitiesRef.current.towerCurrentHp) {
+      gameEntitiesRef.current.towerCurrentHp = towerStats.hp;
+    }
   }, [towerStats, wave, skills, isPaused]);
 
   // รีเซ็ตสนามเมื่อเริ่มเกมใหม่ที่ Wave 1
@@ -76,12 +121,28 @@ export default function GameCanvas({
       gameEntitiesRef.current.meteorTimer = 0;
       gameEntitiesRef.current.frostNovaTimer = 0;
       gameEntitiesRef.current.lastShotTime = 0;
-      gameEntitiesRef.current.spawnTimer = 0;
+      gameEntitiesRef.current.spawnTimer = 1000;
       gameEntitiesRef.current.poisonSpawnTimer = 0;
       gameEntitiesRef.current.lastTriggeredWave = 0;
       gameEntitiesRef.current.isShieldActive = true;
       gameEntitiesRef.current.shieldActiveTimer = 0;
       gameEntitiesRef.current.shieldCooldownTimer = 0;
+      gameEntitiesRef.current.railgunTimer = 0;
+      gameEntitiesRef.current.railgunBeams = [];
+      gameEntitiesRef.current.sniperTimer = 0;
+      gameEntitiesRef.current.sniperTracers = [];
+      gameEntitiesRef.current.gatlingTimer = 0;
+      gameEntitiesRef.current.gatlingDurationTimer = 0;
+      gameEntitiesRef.current.isGatlingActive = false;
+      gameEntitiesRef.current.regenTimer = 0;
+      gameEntitiesRef.current.shockwaveCooldownTimer = 0;
+      gameEntitiesRef.current.shockwaveWave = null;
+      gameEntitiesRef.current.laserDroneAngle = 0;
+      gameEntitiesRef.current.laserDroneTimer = 0;
+      gameEntitiesRef.current.laserDroneBeams = [];
+      gameEntitiesRef.current.repairDroneAngle = 0;
+      gameEntitiesRef.current.repairDroneTimer = 0;
+      gameEntitiesRef.current.repairBeams = [];
     }
   }, [wave, towerStats.maxHp]);
 
@@ -90,14 +151,22 @@ export default function GameCanvas({
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    const parent = canvas.parentElement;
-    canvas.width = parent.clientWidth;
-    canvas.height = parent.clientHeight;
+    const handleResize = () => {
+      const parent = canvas.parentElement;
+      if (parent) {
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
 
     const entities = gameEntitiesRef.current;
     let animationFrameId;
 
     const loop = (timestamp) => {
+      const { onGameOver, onEnemyKilled, onTowerDamaged, onTriggerCardPick } = callbacksRef.current;
+
       // 1. หยุดลูปหากอยู่ในหน้าต่างเลือกการ์ด
       if (isPausedRef.current) {
         animationFrameId = requestAnimationFrame(loop);
@@ -120,6 +189,135 @@ export default function GameCanvas({
       const spellAmpLvl = currentSkills.spell_amp || 0;
       const spellDamageMult = 1 + (spellAmpLvl * 0.35);
       const extraCasts = currentSkills.duplicate_cast || 0; // โบนัสเพิ่มจำนวนสกิล
+
+      // ตัวคูณจาก Shooting Passive Cards
+      const deadlyOpticLvl = currentSkills.deadly_optic || 0;
+      const critChance = 0.20 + (deadlyOpticLvl * 0.15); // Base 20% + 15% ต่อเลเวล
+      const critDamageMult = 2.0 + (deadlyOpticLvl * 0.50); // Base 2x + 0.5x ต่อเลเวล
+
+      const kineticLvl = currentSkills.kinetic_accel || 0;
+      const kineticMult = 1 + (kineticLvl * 0.25); // บัฟดาเมจ +25% ต่อนัดชิ่ง/สะเก็ด
+
+      const heavyCaliberLvl = currentSkills.heavy_caliber || 0;
+      const knockbackForce = heavyCaliberLvl > 0 ? (6 + heavyCaliberLvl * 2.5) : 0;
+
+      const overclockLvl = currentSkills.overclock_barrel || 0;
+      const attackSpeedMult = 1 + (overclockLvl * 0.25);
+      const bulletSpeed = 500 * (1 + overclockLvl * 0.20);
+
+      // ระบบ GATLING OVERDRIVE
+      const gatlingLvl = currentSkills.gatling || 0;
+      let gatlingSpeedBoost = 1.0;
+      if (gatlingLvl > 0) {
+        if (entities.isGatlingActive) {
+          entities.gatlingDurationTimer += 16;
+          gatlingSpeedBoost = 2.0 + (gatlingLvl * 0.50);
+
+          if (entities.gatlingDurationTimer > (3000 + gatlingLvl * 400) * durationMult) {
+            entities.isGatlingActive = false;
+            entities.gatlingDurationTimer = 0;
+          }
+        } else {
+          entities.gatlingTimer += 16;
+          const gatlingInterval = Math.max(3500, (8000 - gatlingLvl * 600) * cooldownMult);
+          if (entities.gatlingTimer > gatlingInterval) {
+            entities.isGatlingActive = true;
+            entities.gatlingTimer = 0;
+            entities.gatlingDurationTimer = 0;
+          }
+        }
+      }
+
+      // ตัวคูณจาก Tank & Drone Passive Cards
+      const regenLvl = currentSkills.regen_core || 0;
+      const thornsLvl = currentSkills.thorns || 0;
+      const thornsMult = thornsLvl > 0 ? (2.5 + thornsLvl * 1.0) : 0;
+      const titanLvl = currentSkills.titan_plating || 0;
+      const damageReduction = titanLvl > 0 ? Math.min(0.55, 0.20 + (titanLvl - 1) * 0.07) : 0;
+
+      const hiveOverdriveLvl = currentSkills.hive_overdrive || 0;
+      const droneSpeedMult = 1 + (hiveOverdriveLvl * 0.80);
+      const droneDmgMult = 1 + (hiveOverdriveLvl * 0.40);
+
+      const hasDuplicator = (currentSkills.drone_duplicator || 0) > 0;
+      const duplicatorLvl = currentSkills.drone_duplicator || 0;
+
+      // 0.1 ระบบฟื้นฟูเลือดอัตโนมัติ (Nano Regen Core)
+      if (regenLvl > 0 && entities.towerCurrentHp < currentStats.maxHp) {
+        entities.regenTimer += 16;
+        if (entities.regenTimer >= 1000) {
+          entities.regenTimer = 0;
+          const healAmount = regenLvl * 3;
+          entities.towerCurrentHp = Math.min(currentStats.maxHp, entities.towerCurrentHp + healAmount);
+          onTowerDamaged(entities.towerCurrentHp);
+
+          entities.damageTexts.push({
+            x: centerX + (Math.random() * 20 - 10),
+            y: centerY - 25,
+            text: `+${healAmount} HP`,
+            isCrit: false,
+            alpha: 1.0,
+            vy: -1.0,
+            color: '#10b981'
+          });
+        }
+      }
+
+      // 0.2 ระบบคลื่นผลักฉุกเฉิน (Emergency Shockwave)
+      const shockwaveLvl = currentSkills.shockwave || 0;
+      if (shockwaveLvl > 0) {
+        if (entities.shockwaveCooldownTimer > 0) {
+          entities.shockwaveCooldownTimer -= 16;
+        } else if (entities.towerCurrentHp < currentStats.maxHp * 0.35) {
+          entities.shockwaveCooldownTimer = Math.max(12000, 20000 * cooldownMult);
+          entities.shockwaveWave = {
+            radius: 20,
+            maxRadius: Math.max(canvas.width, canvas.height) * 0.9 * areaMult
+          };
+
+          const shockDamage = currentStats.damage * (1.5 + shockwaveLvl * 0.8);
+          for (let j = entities.enemies.length - 1; j >= 0; j--) {
+            const e = entities.enemies[j];
+            const pushAngle = getAngle(centerX, centerY, e.x, e.y);
+            const pushDist = e.isBoss ? 45 : (e.isMiniBoss ? 80 : 160);
+            e.x += Math.cos(pushAngle) * pushDist;
+            e.y += Math.sin(pushAngle) * pushDist;
+            e.hp -= shockDamage;
+            e.hitFlashTimer = 5;
+
+            entities.damageTexts.push({
+              x: e.x,
+              y: e.y - 14,
+              text: `💥${Math.round(shockDamage)}`,
+              isCrit: true,
+              alpha: 1.0,
+              vy: -1.5,
+              color: '#f59e0b'
+            });
+
+            if (e.hp <= 0) {
+              entities.enemies.splice(j, 1);
+              onEnemyKilled(e.rewardCoins || 10);
+            }
+          }
+        }
+      }
+
+      // วาดคลื่นกระแทกฉุกเฉิน VFX
+      if (entities.shockwaveWave) {
+        entities.shockwaveWave.radius += 20;
+        ctx.save();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, entities.shockwaveWave.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        if (entities.shockwaveWave.radius >= entities.shockwaveWave.maxRadius) {
+          entities.shockwaveWave = null;
+        }
+      }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -169,7 +367,15 @@ export default function GameCanvas({
       if (entities.spawnTimer > spawnInterval) {
         entities.spawnTimer = 0;
         const angle = Math.random() * Math.PI * 2;
-        const spawnRadius = Math.max(canvas.width, canvas.height) * 0.75;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const halfW = canvas.width / 2;
+        const halfH = canvas.height / 2;
+        // คำนวณระยะขอบจอในทิศทางของมุมนั้นๆ ให้เกิดเลยขอบจอออกไปเพียง 25px
+        const distToEdgeX = Math.abs(cos) > 0.0001 ? Math.abs(halfW / cos) : Infinity;
+        const distToEdgeY = Math.abs(sin) > 0.0001 ? Math.abs(halfH / sin) : Infinity;
+        const borderDist = Math.min(distToEdgeX, distToEdgeY);
+        const spawnDist = borderDist + 25;
 
         const isMiniBoss = (currentWave % 5 === 3) && Math.random() < 0.35;
         const isBoss = (currentWave % 5 === 0) && Math.random() < (currentWave >= 20 ? 0.45 : 0.25);
@@ -188,27 +394,27 @@ export default function GameCanvas({
 
         let finalHp = baseHp;
         let radius = 12;
-        let speed = Math.min(50, 22 + currentWave * 0.8);
+        let speed = Math.min(65, 30 + currentWave * 1.0);
         let rewardCoins = 10 + currentWave * 2;
         let damageToTower = Math.min(45, 12 + currentWave);
 
         if (isBoss) {
           finalHp = baseHp * 5;
           radius = 22;
-          speed = 16;
+          speed = 20;
           rewardCoins = 60 + currentWave * 4;
           damageToTower = Math.min(80, 35 + currentWave * 1.5);
         } else if (isMiniBoss) {
           finalHp = baseHp * 2.5;
           radius = 17;
-          speed = 20;
+          speed = 25;
           rewardCoins = 35 + currentWave * 3;
           damageToTower = Math.min(60, 25 + currentWave * 1.2);
         }
 
         entities.enemies.push({
-          x: centerX + Math.cos(angle) * spawnRadius,
-          y: centerY + Math.sin(angle) * spawnRadius,
+          x: centerX + cos * spawnDist,
+          y: centerY + sin * spawnDist,
           hp: finalHp,
           maxHp: finalHp,
           speed,
@@ -281,31 +487,36 @@ export default function GameCanvas({
           entities.shieldActiveTimer += 16;
           entities.shieldAngle += 0.05;
 
+          const totalShields = 1 + extraCasts;
           const shieldDist = (55 + shieldLvl * 5) * areaMult;
-          const shieldX = centerX + Math.cos(entities.shieldAngle) * shieldDist;
-          const shieldY = centerY + Math.sin(entities.shieldAngle) * shieldDist;
 
-          ctx.fillStyle = '#06b6d4';
-          ctx.beginPath();
-          ctx.arc(shieldX, shieldY, 12, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#67e8f9';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          for (let sIdx = 0; sIdx < totalShields; sIdx++) {
+            const sAngle = entities.shieldAngle + (Math.PI * 2 / totalShields) * sIdx;
+            const shieldX = centerX + Math.cos(sAngle) * shieldDist;
+            const shieldY = centerY + Math.sin(sAngle) * shieldDist;
 
-          for (let j = entities.enemies.length - 1; j >= 0; j--) {
-            const e = entities.enemies[j];
-            if (getDistance(shieldX, shieldY, e.x, e.y) < e.radius + 12) {
-              e.hp -= currentStats.damage * 0.8 * spellDamageMult;
-              e.hitFlashTimer = 3;
-              const pushAngle = getAngle(centerX, centerY, e.x, e.y);
-              e.x += Math.cos(pushAngle) * 30;
-              e.y += Math.sin(pushAngle) * 30;
+            ctx.fillStyle = '#06b6d4';
+            ctx.beginPath();
+            ctx.arc(shieldX, shieldY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#67e8f9';
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-              if (e.hp <= 0) {
-                entities.enemies.splice(j, 1);
-                onEnemyKilled(e.rewardCoins || 10);
-                triggerSpellKillExplosion(e.x, e.y);
+            for (let j = entities.enemies.length - 1; j >= 0; j--) {
+              const e = entities.enemies[j];
+              if (getDistance(shieldX, shieldY, e.x, e.y) < e.radius + 12) {
+                e.hp -= currentStats.damage * 0.8 * spellDamageMult;
+                e.hitFlashTimer = 3;
+                const pushAngle = getAngle(centerX, centerY, e.x, e.y);
+                e.x += Math.cos(pushAngle) * 30;
+                e.y += Math.sin(pushAngle) * 30;
+
+                if (e.hp <= 0) {
+                  entities.enemies.splice(j, 1);
+                  onEnemyKilled(e.rewardCoins || 10);
+                  triggerSpellKillExplosion(e.x, e.y);
+                }
               }
             }
           }
@@ -356,9 +567,19 @@ export default function GameCanvas({
           const d = getDistance(centerX, centerY, e.x, e.y);
 
           // ตรวจสอบมอนสเตอร์ที่อยู่ในแนวคลื่น และยังไม่เคยโดนคลื่นลูกนี้ทำดาเมจ
-          if (Math.abs(d - fn.radius) < 15 && !e.hitByCurrentWave) {
+          if (Math.abs(d - fn.radius) < 18 && !e.hitByCurrentWave) {
             e.hitByCurrentWave = true;
-            e.frozenTimer = Math.max(e.frozenTimer || 0, Math.round(fn.freezeDuration * 60));
+
+            // บอสหลุดไวขึ้น 70% (เหลือเวลา 30%), มินิบอสหลุดไวขึ้น 50% (เหลือเวลา 50%)
+            let resistFactor = 1.0;
+            if (e.isBoss) {
+              resistFactor = 0.30;
+            } else if (e.isMiniBoss) {
+              resistFactor = 0.50;
+            }
+
+            const freezeFrames = Math.round(fn.freezeDuration * 60 * resistFactor);
+            e.frozenTimer = Math.max(e.frozenTimer || 0, freezeFrames);
             e.hp -= frostDamage;
             e.hitFlashTimer = 3;
 
@@ -369,7 +590,8 @@ export default function GameCanvas({
               text: Math.round(frostDamage),
               isCrit: false,
               alpha: 1.0,
-              vy: -1.2
+              vy: -1.2,
+              color: '#38bdf8'
             });
 
             if (e.hp <= 0) {
@@ -453,6 +675,127 @@ export default function GameCanvas({
         if (m.life <= 0) entities.meteors.splice(i, 1);
       }
 
+      // 6.5. ระบบ RAILGUN PIERCER (ลำแสงทะลวงแถว)
+      const railgunLvl = currentSkills.railgun || 0;
+      if (railgunLvl > 0 && entities.enemies.length > 0) {
+        entities.railgunTimer += 16;
+        const railgunInterval = Math.max(2200, (6000 - railgunLvl * 500) * cooldownMult);
+
+        if (entities.railgunTimer > railgunInterval) {
+          entities.railgunTimer = 0;
+
+          // เล็งไปทางศัตรูที่ใกล้ที่สุด
+          let nearestEnemy = null;
+          let minD = 9999;
+          for (const enemy of entities.enemies) {
+            const d = getDistance(centerX, centerY, enemy.x, enemy.y);
+            if (d < minD) {
+              minD = d;
+              nearestEnemy = enemy;
+            }
+          }
+
+          if (nearestEnemy) {
+            const beamAngle = getAngle(centerX, centerY, nearestEnemy.x, nearestEnemy.y);
+            const beamLen = Math.max(canvas.width, canvas.height) * 1.5;
+            const endX = centerX + Math.cos(beamAngle) * beamLen;
+            const endY = centerY + Math.sin(beamAngle) * beamLen;
+            const beamWidth = (10 + railgunLvl * 3) * areaMult;
+
+            const isRailCrit = Math.random() < critChance;
+            const railDamage = currentStats.damage * (3.0 + railgunLvl * 0.8) * (isRailCrit ? critDamageMult : 1);
+
+            entities.railgunBeams.push({
+              x1: centerX,
+              y1: centerY,
+              x2: endX,
+              y2: endY,
+              width: beamWidth,
+              life: 10
+            });
+
+            for (let j = entities.enemies.length - 1; j >= 0; j--) {
+              const e = entities.enemies[j];
+              const distToBeam = distToSegment(e.x, e.y, centerX, centerY, endX, endY);
+
+              if (distToBeam < beamWidth + e.radius) {
+                e.hp -= railDamage;
+                e.hitFlashTimer = 4;
+
+                entities.damageTexts.push({
+                  x: e.x,
+                  y: e.y - 14,
+                  text: Math.round(railDamage),
+                  isCrit: isRailCrit,
+                  alpha: 1.0,
+                  vy: -1.4,
+                  color: '#06b6d4'
+                });
+
+                if (e.hp <= 0) {
+                  entities.enemies.splice(j, 1);
+                  onEnemyKilled(e.rewardCoins || 10);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 6.6. ระบบ HEAVY SNIPER (สไนเปอร์ล่าบอส เล็งตัวเลือดสูงสุดเสมอ)
+      const sniperLvl = currentSkills.sniper || 0;
+      if (sniperLvl > 0 && entities.enemies.length > 0) {
+        entities.sniperTimer += 16;
+        const sniperInterval = Math.max(1800, (4500 - sniperLvl * 400) * cooldownMult);
+
+        if (entities.sniperTimer > sniperInterval) {
+          entities.sniperTimer = 0;
+
+          // ค้นหาศัตรูที่มี HP สูงสุดในจอ (Boss / Mini-Boss)
+          let bossTarget = entities.enemies[0];
+          for (const e of entities.enemies) {
+            if (e.hp > bossTarget.hp) bossTarget = e;
+          }
+
+          if (bossTarget) {
+            const sniperDamage = currentStats.damage * (4.5 + sniperLvl * 1.5) * critDamageMult;
+            bossTarget.hp -= sniperDamage;
+            bossTarget.hitFlashTimer = 5;
+
+            // ผลักถอยหลังอย่างแรง
+            const snAngle = getAngle(centerX, centerY, bossTarget.x, bossTarget.y);
+            bossTarget.x += Math.cos(snAngle) * 14;
+            bossTarget.y += Math.sin(snAngle) * 14;
+
+            entities.sniperTracers.push({
+              x1: centerX,
+              y1: centerY,
+              x2: bossTarget.x,
+              y2: bossTarget.y,
+              life: 8
+            });
+
+            entities.damageTexts.push({
+              x: bossTarget.x,
+              y: bossTarget.y - 18,
+              text: `🎯${Math.round(sniperDamage)}`,
+              isCrit: true,
+              alpha: 1.0,
+              vy: -1.8,
+              color: '#ef4444'
+            });
+
+            if (bossTarget.hp <= 0) {
+              const idx = entities.enemies.indexOf(bossTarget);
+              if (idx !== -1) {
+                entities.enemies.splice(idx, 1);
+                onEnemyKilled(bossTarget.rewardCoins || 10);
+              }
+            }
+          }
+        }
+      }
+
       // 7. ป้อมเล็งยิงกระสุน
       let target = null;
       let minDistance = currentStats.range;
@@ -464,12 +807,13 @@ export default function GameCanvas({
         }
       }
 
-      const fireInterval = 1000 / currentStats.attackSpeed;
+      const effectiveAttackSpeed = currentStats.attackSpeed * attackSpeedMult * gatlingSpeedBoost;
+      const fireInterval = 1000 / effectiveAttackSpeed;
       if (target && timestamp - entities.lastShotTime > fireInterval) {
         entities.lastShotTime = timestamp;
         const baseAngle = getAngle(centerX, centerY, target.x, target.y);
-        const isCrit = Math.random() < 0.2;
-        const actualDamage = isCrit ? currentStats.damage * 2 : currentStats.damage;
+        const isCrit = Math.random() < critChance;
+        const actualDamage = isCrit ? currentStats.damage * critDamageMult : currentStats.damage;
 
         const bounceCount = currentSkills.bouncing || 0;
         const multishotLevel = currentSkills.multishot || 0;
@@ -482,11 +826,12 @@ export default function GameCanvas({
           entities.bullets.push({
             x: centerX,
             y: centerY,
-            vx: Math.cos(angle) * 500,
-            vy: Math.sin(angle) * 500,
+            vx: Math.cos(angle) * bulletSpeed,
+            vy: Math.sin(angle) * bulletSpeed,
             damage: actualDamage,
             isCrit,
-            bouncesLeft: bounceCount
+            bouncesLeft: bounceCount,
+            isShrapnel: false
           });
         }
       }
@@ -497,10 +842,17 @@ export default function GameCanvas({
         b.x += b.vx * 0.016;
         b.y += b.vy * 0.016;
 
-        ctx.fillStyle = b.isCrit ? '#fbbf24' : '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.isCrit ? 6 : 4, 0, Math.PI * 2);
-        ctx.fill();
+        if (b.isShrapnel) {
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = b.isCrit ? '#fbbf24' : (entities.isGatlingActive ? '#facc15' : '#38bdf8');
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.isCrit ? 6 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         for (let j = entities.enemies.length - 1; j >= 0; j--) {
           const e = entities.enemies[j];
@@ -508,14 +860,43 @@ export default function GameCanvas({
             e.hp -= b.damage;
             e.hitFlashTimer = 4;
 
+            // ผลักศัตรูถอยหลัง (Heavy Caliber)
+            if (knockbackForce > 0) {
+              const pushAngle = getAngle(centerX, centerY, e.x, e.y);
+              const pushDist = (e.isBoss ? 2 : (e.isMiniBoss ? 4 : knockbackForce));
+              e.x += Math.cos(pushAngle) * pushDist;
+              e.y += Math.sin(pushAngle) * pushDist;
+            }
+
             entities.damageTexts.push({
               x: e.x + (Math.random() * 12 - 6),
               y: e.y - 10,
               text: Math.round(b.damage),
               isCrit: b.isCrit,
               alpha: 1.0,
-              vy: -1.2
+              vy: -1.2,
+              color: b.isShrapnel ? '#fb923c' : (b.isCrit ? '#f59e0b' : '#f8fafc')
             });
+
+            // ปล่อยสะเก็ดระเบิด (Shrapnel Round)
+            const shrapnelLvl = currentSkills.shrapnel || 0;
+            if (!b.isShrapnel && shrapnelLvl > 0) {
+              const shrapnelCount = 4 + (shrapnelLvl * 2);
+              const shrapnelDmg = b.damage * (0.35 + shrapnelLvl * 0.10) * (kineticLvl > 0 ? kineticMult : 1);
+              for (let s = 0; s < shrapnelCount; s++) {
+                const sAngle = (Math.PI * 2 / shrapnelCount) * s + (Math.random() * 0.3 - 0.15);
+                entities.bullets.push({
+                  x: e.x,
+                  y: e.y,
+                  vx: Math.cos(sAngle) * 420,
+                  vy: Math.sin(sAngle) * 420,
+                  damage: shrapnelDmg,
+                  isCrit: false,
+                  bouncesLeft: Math.min(1, bounceCount),
+                  isShrapnel: true
+                });
+              }
+            }
 
             if (b.bouncesLeft > 0) {
               b.bouncesLeft--;
@@ -533,6 +914,11 @@ export default function GameCanvas({
               }
 
               if (nextTarget) {
+                // บัฟดาเมจชิ่งจาก Kinetic Accel
+                if (kineticLvl > 0) {
+                  b.damage *= kineticMult;
+                }
+
                 entities.lightningBeams.push({
                   x1: e.x,
                   y1: e.y,
@@ -588,35 +974,243 @@ export default function GameCanvas({
         if (beam.alpha <= 0) entities.lightningBeams.splice(i, 1);
       }
 
-      // 9. โดรนบริวาร (Drone)
+      // วาดลำแสง RAILGUN VFX
+      for (let i = entities.railgunBeams.length - 1; i >= 0; i--) {
+        const rb = entities.railgunBeams[i];
+        rb.life--;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, rb.life / 10);
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = rb.width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(rb.x1, rb.y1);
+        ctx.lineTo(rb.x2, rb.y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(2, rb.width * 0.35);
+        ctx.beginPath();
+        ctx.moveTo(rb.x1, rb.y1);
+        ctx.lineTo(rb.x2, rb.y2);
+        ctx.stroke();
+        ctx.restore();
+
+        if (rb.life <= 0) entities.railgunBeams.splice(i, 1);
+      }
+
+      // วาดเลเซอร์ SNIPER VFX
+      for (let i = entities.sniperTracers.length - 1; i >= 0; i--) {
+        const st = entities.sniperTracers[i];
+        st.life--;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, st.life / 8);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(st.x1, st.y1);
+        ctx.lineTo(st.x2, st.y2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(st.x2, st.y2, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        if (st.life <= 0) entities.sniperTracers.splice(i, 1);
+      }
+
+      // 9. โดรนบริวาร (Drone System)
       const droneCount = currentSkills.drone || 0;
       if (droneCount > 0) {
-        entities.droneAngle += 0.035;
-        const droneRadius = 65 * areaMult;
+        entities.droneAngle += 0.035 * droneSpeedMult;
+        const baseRadius = 65 * areaMult;
+        const outerRadius = 115 * areaMult;
 
-        for (let i = 0; i < droneCount; i++) {
-          const offset = (Math.PI * 2 / droneCount) * i;
-          const dAngle = entities.droneAngle + offset;
-          const droneX = centerX + Math.cos(dAngle) * droneRadius;
-          const droneY = centerY + Math.sin(dAngle) * droneRadius;
+        const totalRings = hasDuplicator ? 2 : 1;
+        for (let ring = 0; ring < totalRings; ring++) {
+          const currentRadius = ring === 0 ? baseRadius : outerRadius;
+          // หมุนไปทางเดียวกันทั้งวงในและวงนอก สลับมุมเหลื่อมกันเล็กน้อยให้กวาดคลุมพื้นที่สวยงาม ไม่ซ้อนทับกัน
+          const ringPhaseOffset = ring === 1 ? (Math.PI / droneCount) : 0;
+          const ringDmgBonus = ring === 1 ? (1 + duplicatorLvl * 0.3) : 1;
 
-          ctx.fillStyle = '#fbbf24';
-          ctx.beginPath();
-          ctx.arc(droneX, droneY, 7, 0, Math.PI * 2);
-          ctx.fill();
+          for (let i = 0; i < droneCount; i++) {
+            const offset = (Math.PI * 2 / droneCount) * i;
+            const dAngle = entities.droneAngle + offset + ringPhaseOffset;
+            const droneX = centerX + Math.cos(dAngle) * currentRadius;
+            const droneY = centerY + Math.sin(dAngle) * currentRadius;
 
-          for (let j = entities.enemies.length - 1; j >= 0; j--) {
-            const e = entities.enemies[j];
-            if (getDistance(droneX, droneY, e.x, e.y) < e.radius + 7) {
-              e.hp -= currentStats.damage * 0.4;
-              e.hitFlashTimer = 2;
-              if (e.hp <= 0) {
-                entities.enemies.splice(j, 1);
-                onEnemyKilled(e.rewardCoins || 10);
+            ctx.fillStyle = ring === 0 ? '#fbbf24' : '#c084fc';
+            ctx.beginPath();
+            ctx.arc(droneX, droneY, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // รัศมีใบมีดตัด
+            for (let j = entities.enemies.length - 1; j >= 0; j--) {
+              const e = entities.enemies[j];
+              if (getDistance(droneX, droneY, e.x, e.y) < e.radius + 8) {
+                const contactDmg = currentStats.damage * (0.4 + droneCount * 0.08) * droneDmgMult * ringDmgBonus;
+                e.hp -= contactDmg;
+                e.hitFlashTimer = 2;
+                if (e.hp <= 0) {
+                  entities.enemies.splice(j, 1);
+                  onEnemyKilled(e.rewardCoins || 10);
+                }
               }
             }
           }
         }
+      }
+
+      // 9.1 โดรนปืนเลเซอร์ (Laser Drone)
+      const laserDroneLvl = currentSkills.laser_drone || 0;
+      if (laserDroneLvl > 0) {
+        entities.laserDroneAngle += 0.028 * droneSpeedMult;
+        entities.laserDroneTimer += 16;
+        const laserRadius = 85 * areaMult;
+
+        for (let i = 0; i < laserDroneLvl; i++) {
+          const offset = (Math.PI * 2 / laserDroneLvl) * i;
+          const ldAngle = entities.laserDroneAngle + offset;
+          const ldX = centerX + Math.cos(ldAngle) * laserRadius;
+          const ldY = centerY + Math.sin(ldAngle) * laserRadius;
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(ldX, ldY, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#e0f2fe';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // ยิงแสงเลเซอร์ใส่ศัตรูในระยะ 140px
+          const laserInterval = Math.max(600, (1300 - laserDroneLvl * 100) * cooldownMult);
+          if (entities.laserDroneTimer > laserInterval && entities.enemies.length > 0) {
+            let closeTarget = null;
+            let closeDist = 140;
+
+            for (const e of entities.enemies) {
+              const d = getDistance(ldX, ldY, e.x, e.y);
+              if (d < closeDist) {
+                closeDist = d;
+                closeTarget = e;
+              }
+            }
+
+            if (closeTarget) {
+              const lDmg = currentStats.damage * (0.8 + laserDroneLvl * 0.35) * droneDmgMult;
+              closeTarget.hp -= lDmg;
+              closeTarget.hitFlashTimer = 3;
+
+              entities.laserDroneBeams.push({
+                x1: ldX,
+                y1: ldY,
+                x2: closeTarget.x,
+                y2: closeTarget.y,
+                life: 6
+              });
+
+              entities.damageTexts.push({
+                x: closeTarget.x,
+                y: closeTarget.y - 10,
+                text: Math.round(lDmg),
+                isCrit: false,
+                alpha: 1.0,
+                vy: -1.0,
+                color: '#38bdf8'
+              });
+
+              if (closeTarget.hp <= 0) {
+                const idx = entities.enemies.indexOf(closeTarget);
+                if (idx !== -1) {
+                  entities.enemies.splice(idx, 1);
+                  onEnemyKilled(closeTarget.rewardCoins || 10);
+                }
+              }
+            }
+          }
+        }
+        if (entities.laserDroneTimer > Math.max(600, (1300 - laserDroneLvl * 100) * cooldownMult)) {
+          entities.laserDroneTimer = 0;
+        }
+      }
+
+      // วาดเลเซอร์โดรน VFX
+      for (let i = entities.laserDroneBeams.length - 1; i >= 0; i--) {
+        const lb = entities.laserDroneBeams[i];
+        lb.life--;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, lb.life / 6);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(lb.x1, lb.y1);
+        ctx.lineTo(lb.x2, lb.y2);
+        ctx.stroke();
+        ctx.restore();
+        if (lb.life <= 0) entities.laserDroneBeams.splice(i, 1);
+      }
+
+      // 9.2 โดรนพยาบาลซ่อมบำรุง (Nanite Repair Drone)
+      const repairDroneLvl = currentSkills.repair_drone || 0;
+      if (repairDroneLvl > 0) {
+        entities.repairDroneAngle += 0.022 * droneSpeedMult;
+        entities.repairDroneTimer += 16;
+        const repRadius = 45 * areaMult;
+        const repX = centerX + Math.cos(entities.repairDroneAngle) * repRadius;
+        const repY = centerY + Math.sin(entities.repairDroneAngle) * repRadius;
+
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(repX, repY, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#bbf7d0';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const repairInterval = Math.max(1200, 2500 * cooldownMult);
+        if (entities.repairDroneTimer > repairInterval) {
+          entities.repairDroneTimer = 0;
+          if (entities.towerCurrentHp < currentStats.maxHp) {
+            const healVal = 5 + repairDroneLvl * 4;
+            entities.towerCurrentHp = Math.min(currentStats.maxHp, entities.towerCurrentHp + healVal);
+            onTowerDamaged(entities.towerCurrentHp);
+
+            entities.repairBeams.push({
+              x1: repX,
+              y1: repY,
+              x2: centerX,
+              y2: centerY,
+              life: 12
+            });
+
+            entities.damageTexts.push({
+              x: centerX,
+              y: centerY - 28,
+              text: `+${healVal} HP 🩺`,
+              isCrit: false,
+              alpha: 1.0,
+              vy: -1.0,
+              color: '#22c55e'
+            });
+          }
+        }
+      }
+
+      // วาดลำแสงซ่อมบำรุง VFX
+      for (let i = entities.repairBeams.length - 1; i >= 0; i--) {
+        const rb = entities.repairBeams[i];
+        rb.life--;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, rb.life / 12);
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(rb.x1, rb.y1);
+        ctx.lineTo(rb.x2, rb.y2);
+        ctx.stroke();
+        ctx.restore();
+        if (rb.life <= 0) entities.repairBeams.splice(i, 1);
       }
 
       // 10. อัปเดตและวาดมอนสเตอร์
@@ -667,7 +1261,30 @@ export default function GameCanvas({
 
         // ชนป้อม
         if (getDistance(e.x, e.y, centerX, centerY) < 26) {
-          const dmg = e.damageToTower || 20;
+          const rawDmg = e.damageToTower || 20;
+
+          // เกราะไททาเนียมลดทอนดาเมจ (Titanium Plating)
+          const dmg = Math.max(1, Math.round(rawDmg * (1 - damageReduction)));
+
+          // เกราะหนามสะท้อนดาเมจ (Spiked Retaliation)
+          if (thornsMult > 0) {
+            const reflectDmg = Math.round(dmg * thornsMult);
+            e.hp -= reflectDmg;
+            entities.damageTexts.push({
+              x: e.x,
+              y: e.y - 12,
+              text: `🌵${reflectDmg}`,
+              isCrit: true,
+              alpha: 1.0,
+              vy: -1.3,
+              color: '#eab308'
+            });
+
+            if (e.hp <= 0) {
+              onEnemyKilled(e.rewardCoins || 10);
+            }
+          }
+
           entities.enemies.splice(i, 1);
           
           entities.towerCurrentHp = Math.max(0, entities.towerCurrentHp - dmg);
@@ -689,7 +1306,11 @@ export default function GameCanvas({
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, dt.alpha);
-        if (dt.isCrit) {
+        if (dt.color) {
+          ctx.fillStyle = dt.color;
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText(dt.text, dt.x, dt.y);
+        } else if (dt.isCrit) {
           ctx.fillStyle = '#f59e0b';
           ctx.font = 'bold 15px sans-serif';
           ctx.fillText(`💥${dt.text}`, dt.x, dt.y);
@@ -712,12 +1333,24 @@ export default function GameCanvas({
       ctx.lineWidth = 3;
       ctx.stroke();
 
+      // วงแหวนออร่าสีทองขณะ Gatling Overdrive ทำงาน
+      if (entities.isGatlingActive) {
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 25 + Math.sin(Date.now() * 0.02) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       animationFrameId = requestAnimationFrame(loop);
     };
 
     animationFrameId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [onGameOver, onEnemyKilled, onTowerDamaged, onTriggerCardPick]);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   return (
     <canvas 

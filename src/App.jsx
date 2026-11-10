@@ -13,11 +13,16 @@ export default function App() {
   const [coins, setCoins] = useState(0);
   const [wave, setWave] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [gameRunId, setGameRunId] = useState(0);
 
   const [skills, setSkills] = useState({});
   const [isPickingCard, setIsPickingCard] = useState(false);
 
   const [rerollsLeft, setRerollsLeft] = useState(3);
+
+  const [personalBest, setPersonalBest] = useState(() => {
+    return parseInt(localStorage.getItem('idle_personal_best') || '1', 10);
+  });
 
   const [leaders, setLeaders] = useState([]);
   const [loadingLeaders, setLoadingLeaders] = useState(true);
@@ -71,6 +76,12 @@ export default function App() {
   // ระบบตรวจจับ Game Over แล้วบันทึกคะแนนรอบเดียว
   useEffect(() => {
     if (!isGameOver) return;
+
+    if (wave > personalBest) {
+      setPersonalBest(wave);
+      localStorage.setItem('idle_personal_best', wave.toString());
+    }
+
     if (hasSavedScoreRef.current) return;
 
     hasSavedScoreRef.current = true;
@@ -102,6 +113,7 @@ export default function App() {
     localStorage.setItem('idle_player_name', playerName.trim());
     
     hasSavedScoreRef.current = false;
+    setGameRunId((prev) => prev + 1);
     setTowerStats(initialStats);
     setCoins(0);
     setWave(1);
@@ -114,6 +126,7 @@ export default function App() {
   // ปุ่มเล่นใหม่อีกรอบจาก Modal
   const handleRestart = () => {
     hasSavedScoreRef.current = false;
+    setGameRunId((prev) => prev + 1);
     setTowerStats(initialStats);
     setCoins(0);
     setWave(1);
@@ -127,6 +140,7 @@ export default function App() {
   // ปุ่มกลับหน้าแรกจาก Modal
   const handleGoHome = () => {
     hasSavedScoreRef.current = false;
+    setGameRunId((prev) => prev + 1);
     setIsGameOver(false);
     setIsGameStarted(false);
     setTowerStats(initialStats);
@@ -188,6 +202,11 @@ export default function App() {
   };
 
   const handleCardSelected = (cardId) => {
+    if (cardId === 'coin_bonus_500') {
+      setCoins(prev => prev + 500);
+      setIsPickingCard(false);
+      return;
+    }
     setSkills(prev => ({
       ...prev,
       [cardId]: (prev[cardId] || 0) + 1
@@ -243,19 +262,19 @@ export default function App() {
             </form>
           </div>
 
-          <div style={{ width: '100%', maxWidth: '320px', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '14px', boxSizing: 'border-box', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '200px', maxHeight: '340px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '8px' }}>
+          <div style={{ width: '100%', maxWidth: '340px', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px 14px', boxSizing: 'border-box', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '6px' }}>
               <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>🏆 TOP 10 อันดับรอดชีวิต</span>
-              <span style={{ fontSize: '11px', color: '#64748b' }}>สถิติสูงสุด</span>
+              <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold' }}>สถิติคุณ: Wave {personalBest}</span>
             </div>
-            <div style={{ overflowY: 'auto', flex: 1 }}>
+            <div>
               {loadingLeaders ? (
-                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '24px 0' }}>กำลังโหลด...</div>
+                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>กำลังโหลด...</div>
               ) : leaders.length === 0 ? (
-                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '24px 0' }}>ยังไม่มีข้อมูลคะแนน</div>
+                <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>ยังไม่มีข้อมูลคะแนน</div>
               ) : (
                 leaders.map((lead, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 4px', borderBottom: '1px solid #1e293b/60', fontSize: '12px' }}>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px', borderBottom: idx === leaders.length - 1 ? 'none' : '1px solid rgba(30, 41, 59, 0.5)', fontSize: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ width: '22px', fontSize: idx < 3 ? '13px' : '11px', color: '#64748b' }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}</span>
                       <span style={{ color: '#e2e8f0', fontWeight: '500' }}>{lead.name}</span>
@@ -286,9 +305,32 @@ export default function App() {
               </div>
               <span style={{ fontSize: '11px', color: '#64748b' }}>({playerName})</span>
             </div>
-            <div style={{ display: 'flex', gap: '12px', fontWeight: 'bold', fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '13px' }}>
               <span style={{ color: '#fbbf24' }}>🟡 {coins.toLocaleString()}</span>
               <span style={{ color: '#f87171' }}>❤️ {Math.max(0, Math.round(towerStats.hp))}</span>
+              <button
+                onClick={() => {
+                  if (window.confirm('ต้องการเริ่มเกมใหม่ตั้งแต่ Wave 1 ทันทีหรือไม่?')) {
+                    handleRestart();
+                  }
+                }}
+                title="เริ่มเกมใหม่ตั้งแต่ Wave 1"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#f87171',
+                  borderRadius: '6px',
+                  padding: '2px 6px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontWeight: 'normal'
+                }}
+              >
+                🔄 เริ่มใหม่
+              </button>
             </div>
           </header>
 
@@ -305,6 +347,7 @@ export default function App() {
             overflow: 'hidden'
           }}>
             <GameCanvas
+              key={gameRunId}
               towerStats={towerStats}
               wave={wave}
               skills={skills}
@@ -335,6 +378,7 @@ export default function App() {
               rerollsLeft={rerollsLeft}
               onUseReroll={handleUseReroll}
               onSelectCard={handleCardSelected}
+              onRestartGame={handleRestart}
             />
           )}
 
