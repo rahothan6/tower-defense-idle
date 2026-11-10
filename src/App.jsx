@@ -6,8 +6,16 @@ import UpgradePanel from './components/UpgradePanel';
 import LeaderboardModal from './components/LeaderboardModal';
 import CardSelectModal from './components/CardSelectModal';
 import InventoryBar from './components/InventoryBar';
+import { TRANSLATIONS } from './data/translations';
 
 export default function App() {
+  const [lang, setLang] = useState(() => localStorage.getItem('idle_game_lang') || 'th');
+  const handleToggleLang = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem('idle_game_lang', newLang);
+  };
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
+
   const [playerName, setPlayerName] = useState(() => localStorage.getItem('idle_player_name') || '');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -246,16 +254,62 @@ export default function App() {
             maxWidth: '340px',
             margin: 'auto 0'
           }}>
+            {/* สลับภาษา [ TH | EN ] */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginBottom: '10px' }}>
+              <div style={{
+                display: 'inline-flex',
+                backgroundColor: '#1e293b',
+                borderRadius: '8px',
+                padding: '2px',
+                border: '1px solid #334155'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => handleToggleLang('th')}
+                  style={{
+                    padding: '3px 10px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: lang === 'th' ? '#2563eb' : 'transparent',
+                    color: lang === 'th' ? '#ffffff' : '#94a3b8',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  TH
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleLang('en')}
+                  style={{
+                    padding: '3px 10px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: lang === 'en' ? '#2563eb' : 'transparent',
+                    color: lang === 'en' ? '#ffffff' : '#94a3b8',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '300px', marginBottom: '20px' }}>
               <div style={{ fontSize: '42px', marginBottom: '6px' }}>🧙‍♂️</div>
-              <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>HIGH WIZARD DEFENSE</h1>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>ปกป้องจอมเวทตรงกลางให้นานที่สุด</p>
+              <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', color: '#60a5fa' }}>{t.gameTitle}</h1>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px 0' }}>{t.gameSubtitle}</p>
 
               <form onSubmit={handleStartGame} style={{ width: '100%' }}>
                 <input
                   type="text"
                   maxLength={15}
-                  placeholder="ใส่ชื่อของคุณ..."
+                  placeholder={t.namePlaceholder}
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   style={{ width: '100%', padding: '11px', borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '14px', textAlign: 'center', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
@@ -265,21 +319,21 @@ export default function App() {
                   disabled={!playerName.trim()}
                   style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: playerName.trim() ? '#2563eb' : '#334155', color: '#ffffff', fontWeight: 'bold', fontSize: '14px', cursor: playerName.trim() ? 'pointer' : 'not-allowed' }}
                 >
-                  เริ่มเล่นเกม ⚔️
+                  {t.startGame}
                 </button>
               </form>
             </div>
 
             <div style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '14px', padding: '12px 14px', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '8px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>🏆 TOP 10 อันดับรอดชีวิต</span>
-                <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold' }}>สถิติคุณ: Wave {personalBest}</span>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>{t.top10Title}</span>
+                <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 'bold' }}>{t.personalBest}: Wave {personalBest}</span>
               </div>
               <div>
                 {loadingLeaders ? (
-                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>กำลังโหลด...</div>
+                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>{t.loading}</div>
                 ) : leaders.length === 0 ? (
-                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>ยังไม่มีข้อมูลคะแนน</div>
+                  <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b', padding: '16px 0' }}>{t.noScores}</div>
                 ) : (
                   leaders.map((lead, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px', borderBottom: idx === leaders.length - 1 ? 'none' : '1px solid rgba(30, 41, 59, 0.5)', fontSize: '12px' }}>
@@ -319,11 +373,11 @@ export default function App() {
               <span style={{ color: '#f87171' }}>❤️ {Math.max(0, Math.round(towerStats.hp))}</span>
               <button
                 onClick={() => {
-                  if (window.confirm('ต้องการเริ่มเกมใหม่ตั้งแต่ Wave 1 ทันทีหรือไม่?')) {
+                  if (window.confirm(t.restartConfirm)) {
                     handleRestart();
                   }
                 }}
-                title="เริ่มเกมใหม่ตั้งแต่ Wave 1"
+                title={t.restartBtn}
                 style={{
                   backgroundColor: 'rgba(239, 68, 68, 0.1)',
                   border: '1px solid rgba(239, 68, 68, 0.35)',
@@ -338,7 +392,7 @@ export default function App() {
                   fontWeight: 'normal'
                 }}
               >
-                🔄 เริ่มใหม่
+                {t.restartBtn}
               </button>
             </div>
           </header>
@@ -377,7 +431,7 @@ export default function App() {
             padding: '10px 12px',
             boxSizing: 'border-box'
           }}>
-            <UpgradePanel towerStats={towerStats} coins={coins} onUpgrade={handleUpgrade} />
+            <UpgradePanel towerStats={towerStats} coins={coins} onUpgrade={handleUpgrade} lang={lang} />
           </footer>
 
           {isPickingCard && (
@@ -388,6 +442,7 @@ export default function App() {
               onUseReroll={handleUseReroll}
               onSelectCard={handleCardSelected}
               onRestartGame={handleRestart}
+              lang={lang}
             />
           )}
 
@@ -397,6 +452,7 @@ export default function App() {
               wave={wave} 
               onRestart={handleRestart}
               onGoHome={handleGoHome}
+              lang={lang}
             />
           )}
         </>

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { TRANSLATIONS } from '../data/translations';
 
-export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome }) {
+export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome, lang = 'th' }) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,13 +58,13 @@ export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
       }}>
         <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#ef4444', margin: '0 0 6px 0', letterSpacing: '1px' }}>
-          GAME OVER
+          {t.gameOverTitle}
         </h2>
         <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '2px' }}>
-          ผู้เล่น: <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{playerName}</span>
+          {t.playerLabel}: <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{playerName}</span>
         </div>
         <div style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
-          รอดชีวิตถึง: <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>Wave {wave}</span>
+          {t.survivedTo}: <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>Wave {wave}</span>
         </div>
 
         {/* ตาราง TOP 10 */}
@@ -76,14 +78,14 @@ export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome
           overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', fontWeight: 'bold', borderBottom: '1px solid #1e293b', paddingBottom: '6px', marginBottom: '6px' }}>
-            <span>🏆 TOP 10 ผู้รอดชีวิต</span>
-            <span>สถิติสูงสุด</span>
+            <span>{t.top10Survivors}</span>
+            <span>{t.highScoreHeader}</span>
           </div>
 
           {loading ? (
-            <div style={{ fontSize: '12px', color: '#64748b', padding: '16px 0' }}>กำลังโหลด...</div>
+            <div style={{ fontSize: '12px', color: '#64748b', padding: '16px 0' }}>{t.loading}</div>
           ) : leaders.length === 0 ? (
-            <div style={{ fontSize: '12px', color: '#64748b', padding: '16px 0' }}>ยังไม่มีข้อมูล</div>
+            <div style={{ fontSize: '12px', color: '#64748b', padding: '16px 0' }}>{t.noLeaderboardData}</div>
           ) : (
             leaders.map((item, idx) => (
               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', padding: '4px 0' }}>
@@ -118,7 +120,7 @@ export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome
             marginBottom: '8px'
           }}
         >
-          เล่นใหม่อีกรอบ 🔄
+          {t.playAgain}
         </button>
 
         {/* ปุ่มกลับหน้าแรก */}
@@ -136,7 +138,7 @@ export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome
             cursor: 'pointer'
           }}
         >
-          กลับหน้าแรก 🏠
+          {t.goHome}
         </button>
       </div>
     </div>

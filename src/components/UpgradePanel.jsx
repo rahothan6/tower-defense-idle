@@ -1,11 +1,14 @@
 import React from 'react';
 import { getUpgradeCost } from '../utils/gameMath';
+import { TRANSLATIONS } from '../data/translations';
 
-export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
+export default function UpgradePanel({ towerStats, coins, onUpgrade, lang = 'th' }) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
+
   const upgrades = [
     {
       key: 'damage',
-      name: 'พลังโจมตี',
+      name: t.statDamage,
       icon: '⚔️',
       currentVal: towerStats.damage,
       unit: '',
@@ -14,7 +17,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
     },
     {
       key: 'attackSpeed',
-      name: 'ความเร็วยิง',
+      name: t.statSpeed,
       icon: '⚡',
       currentVal: towerStats.attackSpeed,
       unit: '/s',
@@ -23,7 +26,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
     },
     {
       key: 'range',
-      name: 'ระยะยิง',
+      name: t.statRange,
       icon: '🎯',
       currentVal: towerStats.range,
       unit: 'px',
@@ -32,7 +35,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
     },
     {
       key: 'maxHp',
-      name: 'ฟื้นฟู/เพิ่ม HP',
+      name: t.statMaxHp,
       icon: '❤️',
       currentVal: `${Math.round(towerStats.hp)}/${towerStats.maxHp}`,
       unit: '',
@@ -75,7 +78,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
                 <span style={{ fontSize: '10px', color: '#93c5fd' }}>Lv.{item.level}</span>
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                ปัจจุบัน: {item.currentVal} {item.unit}
+                {t.current}: {item.currentVal} {item.unit}
               </div>
               <div style={{
                 display: 'flex',
@@ -86,7 +89,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
                 paddingTop: '4px',
                 color: canAfford ? '#fbbf24' : '#64748b'
               }}>
-                <span>อัปเกรด</span>
+                <span>{t.upgrade}</span>
                 <span>🟡 {item.cost.toLocaleString()}</span>
               </div>
             </button>
@@ -94,7 +97,7 @@ export default function UpgradePanel({ towerStats, coins, onUpgrade }) {
         })}
       </div>
       <div style={{ textAlign: 'center', fontSize: '11px', color: '#64748b' }}>
-        แตะเพื่ออัปเกรดแบบเรียลไทม์
+        {t.upgradeHint}
       </div>
     </div>
   );

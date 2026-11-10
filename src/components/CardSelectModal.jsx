@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { CARDS_DATABASE, CARD_TYPES, MAX_SLOTS, MAX_CARD_LEVEL } from '../data/cardsData';
+import { TRANSLATIONS } from '../data/translations';
 
 // ตารางแมปปิ้งความสัมพันธ์ของ Passive ว่าส่งผลกับ Active สกิลไหนบ้าง
 const PASSIVE_AFFECTED_SKILLS = {
@@ -95,8 +96,10 @@ export default function CardSelectModal({
   rerollsLeft, 
   onUseReroll, 
   onSelectCard,
-  onRestartGame 
+  onRestartGame,
+  lang = 'th'
 }) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
   const [rerollCount, setRerollCount] = useState(0);
 
   const activeCount = Object.keys(currentSkills).filter(id => {
@@ -124,11 +127,11 @@ export default function CardSelectModal({
     if (availablePool.length === 0) {
       return [{
         id: 'coin_bonus_500',
-        name: 'Max Mastery Bonus',
+        name: t.bonusTitle,
         icon: '💰',
         type: 'bonus',
         color: '#fbbf24',
-        getDesc: () => 'คุณครอบครองและอัปเกรดการ์ดจนเต็มครบทุกใบแล้ว! รับโบนัสเหรียญ +500 Coins'
+        getDesc: () => t.bonusDesc
       }];
     }
     const shuffled = [...availablePool].sort(() => 0.5 - Math.random());
@@ -162,10 +165,10 @@ export default function CardSelectModal({
           letterSpacing: '2px', 
           marginBottom: '4px' 
         }}>
-          {isBossWave ? `🔥 PREPARE FOR BOSS WAVE ${wave} 🔥` : `⚡ PREPARE FOR MINI-BOSS WAVE ${wave} ⚡`}
+          {isBossWave ? t.bossWaveTitle(wave) : t.miniBossWaveTitle(wave)}
         </div>
         <h2 style={{ fontSize: '20px', fontWeight: '900', color: '#ffffff', margin: '0 0 14px 0' }}>
-          เลือกการ์ด 1 ใบ
+          {t.chooseCard}
         </h2>
 
         {/* รายการการ์ด 3 ใบ */}
@@ -230,7 +233,7 @@ export default function CardSelectModal({
 
                 {/* คำอธิบายผลลัพธ์ของการ์ด */}
                 <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.4' }}>
-                  {card.getDesc(currentLevel)}
+                  {card.getDesc(currentLevel, lang)}
                 </div>
 
                 {/* แถบแสดงไอคอนสกิล Active ที่ได้รับผล (เฉพาะการ์ด Passive) */}
@@ -244,7 +247,7 @@ export default function CardSelectModal({
                     gap: '6px',
                     flexWrap: 'wrap'
                   }}>
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>มีผลกับ:</span>
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>{t.affects}</span>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
                       {affectedSkills.map((sk, idx) => (
                         <span
@@ -293,7 +296,7 @@ export default function CardSelectModal({
             gap: '6px'
           }}
         >
-          <span>🎲 สุ่มการ์ดใหม่</span>
+          <span>{t.rerollCards}</span>
           <span style={{
             fontSize: '11px',
             backgroundColor: rerollsLeft > 0 ? '#f59e0b' : '#475569',
@@ -301,7 +304,7 @@ export default function CardSelectModal({
             padding: '1px 6px',
             borderRadius: '12px'
           }}>
-            เหลือ {rerollsLeft}
+            {t.rerollLeft(rerollsLeft)}
           </span>
         </button>
 
@@ -309,7 +312,7 @@ export default function CardSelectModal({
         {onRestartGame && (
           <button
             onClick={() => {
-              if (window.confirm('ต้องการเริ่มเกมใหม่ตั้งแต่ Wave 1 ทันทีหรือไม่?')) {
+              if (window.confirm(t.restartConfirm)) {
                 onRestartGame();
               }
             }}
@@ -329,7 +332,7 @@ export default function CardSelectModal({
               gap: '5px'
             }}
           >
-            <span>🔄 เริ่มเกมรอบใหม่ (Wave 1)</span>
+            <span>{t.quickRestart}</span>
           </button>
         )}
       </div>
