@@ -17,9 +17,11 @@ export default function InventoryBar({ skills }) {
     const slots = [];
     for (let i = 0; i < MAX_SLOTS; i++) {
       const item = items[i];
+      const slotLabel = type === CARD_TYPES.ACTIVE ? 'Active Slot' : 'Passive Slot';
       slots.push(
         <div
           key={i}
+          title={item ? `${item.name} (${item.subName || ''}) - Lv.${item.level}` : slotLabel}
           style={{
             width: '32px',
             height: '32px',

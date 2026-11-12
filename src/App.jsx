@@ -361,7 +361,8 @@ export default function App() {
             backgroundColor: '#111827',
             borderBottom: '1px solid #1f2937',
             flexShrink: 0,
-            zIndex: 10
+            position: 'relative',
+            zIndex: 110
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.2)', border: '1px solid #3b82f6', color: '#60a5fa', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px' }}>
@@ -398,7 +399,18 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0', backgroundColor: '#0b1120', flexShrink: 0 }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '6px 0',
+            backgroundColor: '#0b1120',
+            borderBottom: isPickingCard ? '1px solid #3b82f6' : '1px solid #1e293b',
+            boxShadow: isPickingCard ? '0 4px 14px rgba(0, 0, 0, 0.6)' : 'none',
+            flexShrink: 0,
+            position: 'relative',
+            zIndex: 110,
+            transition: 'border-color 0.2s, box-shadow 0.2s'
+          }}>
             <InventoryBar skills={skills} />
           </div>
 

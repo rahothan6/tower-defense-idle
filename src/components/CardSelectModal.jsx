@@ -150,14 +150,16 @@ export default function CardSelectModal({
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: 'rgba(3, 7, 18, 0.94)',
+      backgroundColor: 'rgba(3, 7, 18, 0.88)',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '16px',
-      zIndex: 100
+      padding: '105px 16px 20px 16px',
+      overflowY: 'auto',
+      zIndex: 100,
+      boxSizing: 'border-box'
     }}>
-      <div style={{ width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '340px', textAlign: 'center', margin: 'auto 0' }}>
         <div style={{ 
           fontSize: '11px', 
           color: isBossWave ? '#ef4444' : '#a855f7', 

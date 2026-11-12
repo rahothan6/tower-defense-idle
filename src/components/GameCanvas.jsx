@@ -382,7 +382,10 @@ export default function GameCanvas({
 
       // 2. ระบบเสกมอนสเตอร์
       entities.spawnTimer += 16;
-      const spawnInterval = Math.max(220, 1200 - currentWave * 35);
+      // ก่อน Wave 50 ความถี่การเกิดปกติและค่อยๆ เพิ่มขึ้นอย่างเหมาะสม หลัง Wave 50 เร่งอัตราเกิดถี่ขึ้น
+      const spawnInterval = currentWave <= 50
+        ? Math.max(550, 1200 - (currentWave - 1) * 13)
+        : Math.max(220, 550 - (currentWave - 50) * 15);
       
       if (entities.spawnTimer > spawnInterval) {
         entities.spawnTimer = 0;
@@ -414,7 +417,8 @@ export default function GameCanvas({
 
         let finalHp = baseHp;
         let radius = 12;
-        let speed = Math.min(65, 30 + currentWave * 1.0);
+        // มอนสเตอร์ทั่วไป: ก่อน Wave 50 ความเร็วปกติ 25, หลัง Wave 50 เร่งความเร็วขึ้น 50% (25 -> 37.5) และค่อยๆ ไต่ระดับขึ้น
+        let speed = currentWave > 50 ? Math.min(60, 37.5 + (currentWave - 50) * 0.5) : 25;
         let rewardCoins = 10 + currentWave * 2;
         let damageToTower = Math.min(45, 12 + currentWave);
 
@@ -422,16 +426,16 @@ export default function GameCanvas({
         if (isBoss) {
           finalHp = baseHp * 5;
           radius = 24;
-          // หลัง Wave 50 บอสเดินไวขึ้น 50% (20 -> 30)
-          speed = currentWave > 50 ? 30 : 20;
+          // บอส: ก่อน Wave 50 ความเร็ว 20, หลัง Wave 50 เดินไวขึ้น 50% (20 -> 30) และค่อยๆ ไต่ระดับขึ้น
+          speed = currentWave > 50 ? Math.min(45, 30 + (currentWave - 50) * 0.3) : 20;
           rewardCoins = 60 + currentWave * 4;
           damageToTower = Math.min(80, 35 + currentWave * 1.5);
           monsterType = currentWave >= 25 ? 'baphomet' : 'gtb';
         } else if (isMiniBoss) {
           finalHp = baseHp * 2.5;
           radius = 18;
-          // หลัง Wave 50 มินิบอสเดินไวขึ้น 50% (25 -> 37.5)
-          speed = currentWave > 50 ? 37.5 : 25;
+          // มินิบอส: ก่อน Wave 50 ความเร็ว 25, หลัง Wave 50 เดินไวขึ้น 50% (25 -> 37.5) และค่อยๆ ไต่ระดับขึ้น
+          speed = currentWave > 50 ? Math.min(50, 37.5 + (currentWave - 50) * 0.4) : 25;
           rewardCoins = 35 + currentWave * 3;
           damageToTower = Math.min(60, 25 + currentWave * 1.2);
           const miniTypes = ['angeling', 'deviling', 'ghostring'];
@@ -1386,8 +1390,14 @@ export default function GameCanvas({
           const angle = getAngle(e.x, e.y, centerX, centerY);
           let moveSpeed = e.speed;
           if (currentWave > 50) {
-            if (e.isBoss) moveSpeed = Math.max(moveSpeed, 30);
-            else if (e.isMiniBoss) moveSpeed = Math.max(moveSpeed, 37.5);
+            const extraWave = currentWave - 50;
+            if (e.isBoss) {
+              moveSpeed = Math.max(moveSpeed, Math.min(45, 30 + extraWave * 0.3));
+            } else if (e.isMiniBoss) {
+              moveSpeed = Math.max(moveSpeed, Math.min(50, 37.5 + extraWave * 0.4));
+            } else {
+              moveSpeed = Math.max(moveSpeed, Math.min(60, 37.5 + extraWave * 0.5));
+            }
           }
           e.x += Math.cos(angle) * moveSpeed * 0.016;
           e.y += Math.sin(angle) * moveSpeed * 0.016;
