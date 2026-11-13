@@ -265,7 +265,7 @@ export default function ShopModal({
               transition: 'all 0.15s ease'
             }}
           >
-            🎒 {isTh ? 'ปลดช่อง (6)' : 'Slots (6)'}
+            🎒 {isTh ? 'ปลดช่อง' : 'Slots'}
           </button>
         </div>
 
@@ -491,12 +491,6 @@ export default function ShopModal({
           {/* TAB 3: SLOT EXPANSION */}
           {activeTab === 'slots' && (
             <>
-              <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '10px', padding: '8px 10px', fontSize: '10px', color: '#93c5fd', lineHeight: 1.4 }}>
-                {isTh 
-                  ? '💡 ขยายช่องใส่สกิลถาวร จาก 4 ช่องเพิ่มได้สูงสุดเป็นอย่างละ 6 ช่อง (รวมใส่ได้ 12 สกิลในเกมเดียว)' 
-                  : '💡 Permanently expand skill slots from 4 up to 6 slots each (Equip up to 12 skills simultaneously)'}
-              </div>
-
               {/* Active Slots Box */}
               <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
