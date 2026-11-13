@@ -58,33 +58,34 @@ export default function ShopModal({
       position: 'fixed',
       inset: 0,
       backgroundColor: 'rgba(3, 7, 18, 0.90)',
+      backdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '14px',
+      padding: '16px',
       zIndex: 99999,
       boxSizing: 'border-box'
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '380px',
-        backgroundColor: '#0b1120',
+        maxWidth: '340px',
+        backgroundColor: '#0f172a',
         borderRadius: '16px',
         border: '1px solid #1e293b',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
         height: '92vh',
-        maxHeight: '660px',
+        maxHeight: '640px',
         overflow: 'hidden',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
       }}>
 
         {/* Modal Header */}
         <div style={{
-          backgroundColor: '#111827',
+          backgroundColor: '#0f172a',
           padding: '12px 14px',
-          borderBottom: '1px solid #1f2937',
+          borderBottom: '1px solid #1e293b',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -94,7 +95,7 @@ export default function ShopModal({
             <span style={{ fontSize: '20px' }}>🛍️</span>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffffff' }}>
-                {isTh ? 'ร้านค้าเวทมนตร์ (Magic Shop)' : 'Magic Shop'}
+                {isTh ? 'ร้านค้าเวทมนตร์' : 'Magic Shop'}
               </div>
               <div style={{ fontSize: '10px', color: '#94a3b8' }}>
                 {isTh ? 'สกินตัวละคร & ปลดช่องสกิล' : 'Skins & Slot Expansion'}
@@ -103,15 +104,15 @@ export default function ShopModal({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Gem Badge */}
+            {/* Gem Badge (Matching Home Screen Pill Style) */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              backgroundColor: 'rgba(30, 58, 138, 0.5)',
-              border: '1px solid rgba(59, 130, 246, 0.4)',
+              backgroundColor: 'rgba(30, 58, 138, 0.45)',
+              border: '1px solid rgba(59, 130, 246, 0.45)',
               padding: '3px 9px',
-              borderRadius: '20px'
+              borderRadius: '12px'
             }}>
               <span style={{ fontSize: '13px' }}>💎</span>
               <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#93c5fd', fontFamily: 'monospace' }}>
@@ -123,13 +124,19 @@ export default function ShopModal({
             <button
               onClick={onClose}
               style={{
-                background: 'transparent',
-                border: 'none',
+                width: '28px',
+                height: '28px',
+                borderRadius: '8px',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
                 color: '#94a3b8',
-                fontSize: '18px',
+                fontSize: '14px',
                 cursor: 'pointer',
-                padding: '2px 6px',
-                lineHeight: 1
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                padding: 0
               }}
             >
               ✕
@@ -137,11 +144,11 @@ export default function ShopModal({
           </div>
         </div>
 
-        {/* Preview Character & Bullet Stage */}
+        {/* Preview Character & Bullet Stage (Matching inner leaderboard dark style) */}
         <div style={{
-          backgroundColor: '#030712',
+          backgroundColor: '#0b0f19',
           borderBottom: '1px solid #1e293b',
-          padding: '8px 12px',
+          padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
@@ -149,117 +156,127 @@ export default function ShopModal({
         }}>
           {/* Wizard Preview */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '2px' }}>
+            <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '3px' }}>
               {isTh ? 'สกินจอมเวท' : 'Wizard Skin'}
             </div>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '10px',
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
               backgroundColor: '#1e293b',
               border: `2px solid ${currentWiz.colors.crystal}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '22px',
-              boxShadow: `0 0 10px ${currentWiz.colors.crystal}40`
+              boxShadow: `0 0 12px ${currentWiz.colors.crystal}40`
             }}>
               {currentWiz.icon}
             </div>
-            <div style={{ fontSize: '10px', fontWeight: 'bold', color: currentWiz.colors.crystal, marginTop: '3px', maxWidth: '120px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: currentWiz.colors.crystal, marginTop: '4px', maxWidth: '120px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isTh ? currentWiz.nameTh : currentWiz.name}
             </div>
           </div>
 
           {/* Bullet Preview */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '2px' }}>
+            <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '3px' }}>
               {isTh ? 'สกินกระสุน' : 'Bullet Skin'}
             </div>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '10px',
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
               backgroundColor: '#1e293b',
               border: `2px solid ${currentBlt.color}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '22px',
-              boxShadow: `0 0 10px ${currentBlt.color}40`
+              boxShadow: `0 0 12px ${currentBlt.color}40`
             }}>
               {currentBlt.icon}
             </div>
-            <div style={{ fontSize: '10px', fontWeight: 'bold', color: currentBlt.color, marginTop: '3px', maxWidth: '120px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: currentBlt.color, marginTop: '4px', maxWidth: '120px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isTh ? currentBlt.nameTh : currentBlt.name}
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation (Matching Segmented Control of [ TH | EN ]) */}
         <div style={{
           backgroundColor: '#0f172a',
-          padding: '6px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '4px',
+          padding: '8px 12px',
           borderBottom: '1px solid #1e293b',
           flexShrink: 0
         }}>
-          <button
-            onClick={() => setActiveTab('wizards')}
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: activeTab === 'wizards' ? '#2563eb' : 'transparent',
-              color: activeTab === 'wizards' ? '#ffffff' : '#94a3b8'
-            }}
-          >
-            🧙‍♂️ {isTh ? 'สกินตัว' : 'Skins'}
-          </button>
-          <button
-            onClick={() => setActiveTab('bullets')}
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: activeTab === 'bullets' ? '#2563eb' : 'transparent',
-              color: activeTab === 'bullets' ? '#ffffff' : '#94a3b8'
-            }}
-          >
-            🔥 {isTh ? 'สกินกระสุน' : 'Bullets'}
-          </button>
-          <button
-            onClick={() => setActiveTab('slots')}
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: activeTab === 'slots' ? '#2563eb' : 'transparent',
-              color: activeTab === 'slots' ? '#ffffff' : '#94a3b8'
-            }}
-          >
-            🎒 {isTh ? 'ปลดช่อง (6)' : 'Slots (6)'}
-          </button>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            backgroundColor: '#1e293b',
+            borderRadius: '10px',
+            padding: '3px',
+            border: '1px solid #334155',
+            gap: '3px'
+          }}>
+            <button
+              onClick={() => setActiveTab('wizards')}
+              style={{
+                padding: '6px 4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                borderRadius: '7px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'wizards' ? '#2563eb' : 'transparent',
+                color: activeTab === 'wizards' ? '#ffffff' : '#94a3b8',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🧙‍♂️ {isTh ? 'สกินตัว' : 'Skins'}
+            </button>
+            <button
+              onClick={() => setActiveTab('bullets')}
+              style={{
+                padding: '6px 4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                borderRadius: '7px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'bullets' ? '#2563eb' : 'transparent',
+                color: activeTab === 'bullets' ? '#ffffff' : '#94a3b8',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🔥 {isTh ? 'สกินกระสุน' : 'Bullets'}
+            </button>
+            <button
+              onClick={() => setActiveTab('slots')}
+              style={{
+                padding: '6px 4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                borderRadius: '7px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: activeTab === 'slots' ? '#2563eb' : 'transparent',
+                color: activeTab === 'slots' ? '#ffffff' : '#94a3b8',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🎒 {isTh ? 'ปลดช่อง (6)' : 'Slots (6)'}
+            </button>
+          </div>
         </div>
 
-        {/* Tab Content Area */}
+        {/* Tab Content Area (Consistent dark palette #0b0f19) */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '10px',
+          padding: '10px 12px',
           boxSizing: 'border-box',
-          backgroundColor: '#090d16',
+          backgroundColor: '#0b0f19',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px'
@@ -271,15 +288,16 @@ export default function ShopModal({
               {WIZARD_SKINS.map((skin) => {
                 const isOwned = ownedWizardSkins.includes(skin.id);
                 const isEquipped = equippedWizardSkin === skin.id;
+                const isSelected = previewWizard === skin.id;
 
                 return (
                   <div
                     key={skin.id}
                     onClick={() => setPreviewWizard(skin.id)}
                     style={{
-                      backgroundColor: previewWizard === skin.id ? '#1e293b' : '#131c31',
-                      border: `1px solid ${previewWizard === skin.id ? skin.colors.crystal : '#233554'}`,
-                      borderRadius: '10px',
+                      backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.16)' : '#1e293b',
+                      border: `1px solid ${isSelected ? '#3b82f6' : '#334155'}`,
+                      borderRadius: '12px',
                       padding: '8px 10px',
                       display: 'flex',
                       alignItems: 'center',
@@ -290,11 +308,11 @@ export default function ShopModal({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '8px',
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '10px',
                         backgroundColor: '#0f172a',
-                        border: `1px solid ${skin.colors.crystal}60`,
+                        border: `1px solid ${skin.colors.crystal}70`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -314,7 +332,7 @@ export default function ShopModal({
 
                     <div>
                       {isEquipped ? (
-                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', padding: '3px 8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', padding: '4px 8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
                           {isTh ? 'สวมใส่อยู่' : 'Equipped'}
                         </span>
                       ) : isOwned ? (
@@ -324,10 +342,10 @@ export default function ShopModal({
                             onBuyOrEquipSkin('wizard', skin.id, 0);
                           }}
                           style={{
-                            padding: '4px 9px',
+                            padding: '4px 10px',
                             backgroundColor: '#334155',
                             border: '1px solid #475569',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             color: '#ffffff',
                             fontSize: '10px',
                             fontWeight: 'bold',
@@ -344,10 +362,10 @@ export default function ShopModal({
                           }}
                           disabled={gems < skin.cost}
                           style={{
-                            padding: '4px 9px',
-                            backgroundColor: gems >= skin.cost ? '#2563eb' : '#1e293b',
-                            border: 'none',
-                            borderRadius: '6px',
+                            padding: '4px 10px',
+                            backgroundColor: gems >= skin.cost ? '#2563eb' : '#0f172a',
+                            border: gems >= skin.cost ? 'none' : '1px solid #334155',
+                            borderRadius: '8px',
                             color: gems >= skin.cost ? '#ffffff' : '#64748b',
                             fontSize: '10px',
                             fontWeight: 'bold',
@@ -374,15 +392,16 @@ export default function ShopModal({
               {BULLET_SKINS.map((blt) => {
                 const isOwned = ownedBulletSkins.includes(blt.id);
                 const isEquipped = equippedBulletSkin === blt.id;
+                const isSelected = previewBullet === blt.id;
 
                 return (
                   <div
                     key={blt.id}
                     onClick={() => setPreviewBullet(blt.id)}
                     style={{
-                      backgroundColor: previewBullet === blt.id ? '#1e293b' : '#131c31',
-                      border: `1px solid ${previewBullet === blt.id ? blt.color : '#233554'}`,
-                      borderRadius: '10px',
+                      backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.16)' : '#1e293b',
+                      border: `1px solid ${isSelected ? blt.color : '#334155'}`,
+                      borderRadius: '12px',
                       padding: '8px 10px',
                       display: 'flex',
                       alignItems: 'center',
@@ -393,11 +412,11 @@ export default function ShopModal({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '8px',
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '10px',
                         backgroundColor: '#0f172a',
-                        border: `1px solid ${blt.color}60`,
+                        border: `1px solid ${blt.color}70`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -417,7 +436,7 @@ export default function ShopModal({
 
                     <div>
                       {isEquipped ? (
-                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', padding: '3px 8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', padding: '4px 8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
                           {isTh ? 'สวมใส่อยู่' : 'Equipped'}
                         </span>
                       ) : isOwned ? (
@@ -427,10 +446,10 @@ export default function ShopModal({
                             onBuyOrEquipSkin('bullet', blt.id, 0);
                           }}
                           style={{
-                            padding: '4px 9px',
+                            padding: '4px 10px',
                             backgroundColor: '#334155',
                             border: '1px solid #475569',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             color: '#ffffff',
                             fontSize: '10px',
                             fontWeight: 'bold',
@@ -447,10 +466,10 @@ export default function ShopModal({
                           }}
                           disabled={gems < blt.cost}
                           style={{
-                            padding: '4px 9px',
-                            backgroundColor: gems >= blt.cost ? '#2563eb' : '#1e293b',
-                            border: 'none',
-                            borderRadius: '6px',
+                            padding: '4px 10px',
+                            backgroundColor: gems >= blt.cost ? '#2563eb' : '#0f172a',
+                            border: gems >= blt.cost ? 'none' : '1px solid #334155',
+                            borderRadius: '8px',
                             color: gems >= blt.cost ? '#ffffff' : '#64748b',
                             fontSize: '10px',
                             fontWeight: 'bold',
@@ -474,15 +493,15 @@ export default function ShopModal({
           {/* TAB 3: SLOT EXPANSION */}
           {activeTab === 'slots' && (
             <>
-              <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '6px 8px', fontSize: '10px', color: '#93c5fd', lineHeight: 1.4 }}>
+              <div style={{ backgroundColor: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '10px', padding: '8px 10px', fontSize: '10px', color: '#93c5fd', lineHeight: 1.4 }}>
                 {isTh 
                   ? '💡 ขยายช่องใส่สกิลถาวร จาก 4 ช่องเพิ่มได้สูงสุดเป็นอย่างละ 6 ช่อง (รวมใส่ได้ 12 สกิลในเกมเดียว)' 
                   : '💡 Permanently expand skill slots from 4 up to 6 slots each (Equip up to 12 skills simultaneously)'}
               </div>
 
               {/* Active Slots Box */}
-              <div style={{ backgroundColor: '#131c31', border: '1px solid #233554', borderRadius: '10px', padding: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#ffffff' }}>
                     ⚔️ {isTh ? 'ช่องสกิลโจมตี (Active)' : 'Active Slots'}
                   </span>
@@ -500,7 +519,7 @@ export default function ShopModal({
                         key={slotNum}
                         style={{
                           height: '28px',
-                          borderRadius: '6px',
+                          borderRadius: '8px',
                           backgroundColor: isUnlocked ? 'rgba(37, 99, 235, 0.25)' : '#0f172a',
                           border: isUnlocked ? '1.5px solid #3b82f6' : '1px dashed #334155',
                           display: 'flex',
@@ -523,13 +542,13 @@ export default function ShopModal({
                     disabled={gems < 15}
                     style={{
                       width: '100%',
-                      padding: '7px',
-                      backgroundColor: gems >= 15 ? '#2563eb' : '#1e293b',
+                      padding: '8px 10px',
+                      backgroundColor: gems >= 15 ? '#2563eb' : '#0f172a',
                       color: gems >= 15 ? '#ffffff' : '#64748b',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      borderRadius: '6px',
-                      border: 'none',
+                      borderRadius: '8px',
+                      border: gems >= 15 ? 'none' : '1px solid #334155',
                       cursor: gems >= 15 ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       justifyContent: 'space-between'
@@ -544,13 +563,13 @@ export default function ShopModal({
                     disabled={gems < 30}
                     style={{
                       width: '100%',
-                      padding: '7px',
-                      backgroundColor: gems >= 30 ? '#2563eb' : '#1e293b',
+                      padding: '8px 10px',
+                      backgroundColor: gems >= 30 ? '#2563eb' : '#0f172a',
                       color: gems >= 30 ? '#ffffff' : '#64748b',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      borderRadius: '6px',
-                      border: 'none',
+                      borderRadius: '8px',
+                      border: gems >= 30 ? 'none' : '1px solid #334155',
                       cursor: gems >= 30 ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       justifyContent: 'space-between'
@@ -567,8 +586,8 @@ export default function ShopModal({
               </div>
 
               {/* Passive Slots Box */}
-              <div style={{ backgroundColor: '#131c31', border: '1px solid #233554', borderRadius: '10px', padding: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#ffffff' }}>
                     📖 {isTh ? 'ช่องสกิลติดตัว (Passive)' : 'Passive Slots'}
                   </span>
@@ -586,7 +605,7 @@ export default function ShopModal({
                         key={slotNum}
                         style={{
                           height: '28px',
-                          borderRadius: '6px',
+                          borderRadius: '8px',
                           backgroundColor: isUnlocked ? 'rgba(168, 85, 247, 0.25)' : '#0f172a',
                           border: isUnlocked ? '1.5px solid #a855f7' : '1px dashed #334155',
                           display: 'flex',
@@ -609,13 +628,13 @@ export default function ShopModal({
                     disabled={gems < 15}
                     style={{
                       width: '100%',
-                      padding: '7px',
-                      backgroundColor: gems >= 15 ? '#7c3aed' : '#1e293b',
+                      padding: '8px 10px',
+                      backgroundColor: gems >= 15 ? '#7c3aed' : '#0f172a',
                       color: gems >= 15 ? '#ffffff' : '#64748b',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      borderRadius: '6px',
-                      border: 'none',
+                      borderRadius: '8px',
+                      border: gems >= 15 ? 'none' : '1px solid #334155',
                       cursor: gems >= 15 ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       justifyContent: 'space-between'
@@ -630,13 +649,13 @@ export default function ShopModal({
                     disabled={gems < 30}
                     style={{
                       width: '100%',
-                      padding: '7px',
-                      backgroundColor: gems >= 30 ? '#7c3aed' : '#1e293b',
+                      padding: '8px 10px',
+                      backgroundColor: gems >= 30 ? '#7c3aed' : '#0f172a',
                       color: gems >= 30 ? '#ffffff' : '#64748b',
                       fontSize: '11px',
                       fontWeight: 'bold',
-                      borderRadius: '6px',
-                      border: 'none',
+                      borderRadius: '8px',
+                      border: gems >= 30 ? 'none' : '1px solid #334155',
                       cursor: gems >= 30 ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       justifyContent: 'space-between'
@@ -656,11 +675,11 @@ export default function ShopModal({
 
         </div>
 
-        {/* Modal Footer: Save ID & Restore Save Bar */}
+        {/* Modal Footer: Save ID & Restore Save Bar (Consistent Slate-900 style) */}
         <div style={{
-          backgroundColor: '#111827',
-          padding: '8px 12px',
-          borderTop: '1px solid #1f2937',
+          backgroundColor: '#0f172a',
+          padding: '10px 14px',
+          borderTop: '1px solid #1e293b',
           display: 'flex',
           flexDirection: 'column',
           gap: '6px',
@@ -675,18 +694,22 @@ export default function ShopModal({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '10px',
+                  gap: '5px',
+                  fontSize: '11px',
                   color: '#94a3b8',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  backgroundColor: 'rgba(30, 58, 138, 0.25)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  padding: '3px 8px',
+                  borderRadius: '8px'
                 }}
               >
                 <span>🔑 {isTh ? 'รหัสเซฟ:' : 'Save ID:'}</span>
-                <span style={{ color: '#60a5fa', fontWeight: 'bold', fontFamily: 'monospace', textDecoration: 'underline' }}>
+                <span style={{ color: '#93c5fd', fontWeight: 'bold', fontFamily: 'monospace', textDecoration: 'underline' }}>
                   {saveId}
                 </span>
                 {copyFeedback && (
-                  <span style={{ color: '#10b981', fontSize: '9px', fontWeight: 'bold' }}>
+                  <span style={{ color: '#10b981', fontSize: '10px', fontWeight: 'bold' }}>
                     ✓ {isTh ? 'คัดลอกแล้ว' : 'Copied'}
                   </span>
                 )}
@@ -696,20 +719,25 @@ export default function ShopModal({
               <button
                 onClick={() => setIsRestoring(true)}
                 style={{
-                  backgroundColor: 'transparent',
-                  border: '1px solid #374151',
-                  borderRadius: '5px',
-                  color: '#94a3b8',
-                  padding: '2px 7px',
-                  fontSize: '10px',
-                  cursor: 'pointer'
+                  backgroundColor: 'rgba(37, 99, 235, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  borderRadius: '8px',
+                  color: '#93c5fd',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}
               >
-                🔄 {isTh ? 'กู้คืนเซฟ' : 'Restore'}
+                <span>🔄</span>
+                <span>{isTh ? 'กู้คืนเซฟ' : 'Restore'}</span>
               </button>
             </div>
           ) : (
-            <form onSubmit={handleDoRestore} style={{ display: 'flex', gap: '4px', width: '100%' }}>
+            <form onSubmit={handleDoRestore} style={{ display: 'flex', gap: '5px', width: '100%' }}>
               <input
                 type="text"
                 placeholder={isTh ? "พิมพ์รหัส 6 หลัก เช่น WIZ-XXXX" : "Enter Save ID..."}
@@ -717,13 +745,14 @@ export default function ShopModal({
                 onChange={(e) => setInputSaveId(e.target.value.toUpperCase())}
                 style={{
                   flex: 1,
-                  padding: '4px 6px',
+                  padding: '5px 8px',
                   backgroundColor: '#1e293b',
                   border: '1px solid #3b82f6',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   color: '#ffffff',
-                  fontSize: '10px',
-                  fontFamily: 'monospace'
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  outline: 'none'
                 }}
               />
               <button
@@ -731,10 +760,10 @@ export default function ShopModal({
                 style={{
                   backgroundColor: '#2563eb',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   color: '#ffffff',
-                  padding: '4px 8px',
-                  fontSize: '10px',
+                  padding: '5px 10px',
+                  fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer'
                 }}
@@ -745,12 +774,12 @@ export default function ShopModal({
                 type="button"
                 onClick={() => { setIsRestoring(false); setRestoreMessage(''); }}
                 style={{
-                  backgroundColor: '#374151',
+                  backgroundColor: '#334155',
                   border: 'none',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   color: '#ffffff',
-                  padding: '4px 6px',
-                  fontSize: '10px',
+                  padding: '5px 8px',
+                  fontSize: '11px',
                   cursor: 'pointer'
                 }}
               >
@@ -760,7 +789,7 @@ export default function ShopModal({
           )}
 
           {restoreMessage && (
-            <div style={{ fontSize: '9px', color: '#f59e0b', textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: '#f59e0b', textAlign: 'center' }}>
               {restoreMessage}
             </div>
           )}

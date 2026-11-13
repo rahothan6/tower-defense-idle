@@ -560,7 +560,7 @@ export default function App() {
                   }}
                 >
                   <span>{t.shopBtn}</span>
-                  <span style={{ fontSize: '11px', color: '#fbbf24', backgroundColor: 'rgba(0,0,0,0.4)', padding: '1px 6px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '11px', color: '#93c5fd', backgroundColor: 'rgba(30, 58, 138, 0.45)', border: '1px solid rgba(59, 130, 246, 0.45)', padding: '1px 7px', borderRadius: '6px', fontFamily: 'monospace' }}>
                     💎 {gems}
                   </span>
                 </button>
@@ -762,36 +762,38 @@ export default function App() {
       )}
 
       {/* Version Tag with Save ID (Tap to Copy) */}
-      <div style={{
-        position: 'absolute',
-        bottom: '6px',
-        right: '10px',
-        fontSize: '10px',
-        fontFamily: 'monospace',
-        color: '#64748b',
-        letterSpacing: '0.5px',
-        zIndex: 50,
-        userSelect: 'none',
-        opacity: 0.9,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px'
-      }}>
-        <span>{GAME_VERSION}</span>
-        <span>•</span>
-        <span
-          onClick={() => {
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(saveId);
-              alert(lang === 'th' ? `คัดลอกรหัสเซฟ ${saveId} เรียบร้อยแล้ว!` : `Copied Save ID ${saveId}!`);
-            }
-          }}
-          title={lang === 'th' ? "คลิกเพื่อคัดลอกรหัสเซฟ" : "Click to copy Save ID"}
-          style={{ cursor: 'pointer', color: '#93c5fd', textDecoration: 'underline' }}
-        >
-          ID: {saveId}
-        </span>
-      </div>
+      {!isShopOpen && !isGameOver && !isPickingCard && (
+        <div style={{
+          position: 'absolute',
+          bottom: '6px',
+          right: '10px',
+          fontSize: '10px',
+          fontFamily: 'monospace',
+          color: '#64748b',
+          letterSpacing: '0.5px',
+          zIndex: 50,
+          userSelect: 'none',
+          opacity: 0.9,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <span>{GAME_VERSION}</span>
+          <span>•</span>
+          <span
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(saveId);
+                alert(lang === 'th' ? `คัดลอกรหัสเซฟ ${saveId} เรียบร้อยแล้ว!` : `Copied Save ID ${saveId}!`);
+              }
+            }}
+            title={lang === 'th' ? "คลิกเพื่อคัดลอกรหัสเซฟ" : "Click to copy Save ID"}
+            style={{ cursor: 'pointer', color: '#93c5fd', textDecoration: 'underline' }}
+          >
+            ID: {saveId}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
