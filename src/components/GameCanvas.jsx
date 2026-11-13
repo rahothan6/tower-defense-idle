@@ -567,7 +567,7 @@ export default function GameCanvas({
           entities.shieldActiveTimer += 16;
           entities.shieldAngle += 0.05;
 
-          const totalShields = 1 + extraCasts;
+          const totalShields = shieldLvl + extraCasts;
           const shieldDist = (55 + shieldLvl * 5) * areaMult;
 
           for (let sIdx = 0; sIdx < totalShields; sIdx++) {
@@ -700,13 +700,13 @@ export default function GameCanvas({
         const meteorInterval = Math.max(2500, (5000 - meteorLvl * 300) * cooldownMult);
         if (entities.meteorTimer > meteorInterval) {
           entities.meteorTimer = 0;
-          const totalMeteors = 1 + extraCasts;
+          const totalMeteors = meteorLvl + extraCasts;
 
           for (let mCount = 0; mCount < totalMeteors; mCount++) {
             if (entities.enemies.length === 0) break;
             const randomTarget = entities.enemies[Math.floor(Math.random() * entities.enemies.length)];
             const blastRadius = (50 + meteorLvl * 10) * areaMult;
-            const meteorDamage = currentStats.damage * (2.5 + meteorLvl * 1.5) * spellDamageMult;
+            const meteorDamage = currentStats.damage * (2.0 + meteorLvl * 0.5) * spellDamageMult;
 
             entities.meteors.push({
               targetX: randomTarget.x,
@@ -715,7 +715,7 @@ export default function GameCanvas({
               startY: -50,
               radius: blastRadius,
               damage: meteorDamage,
-              progress: 0,
+              progress: -(mCount * 0.12),
               hasExploded: false,
               explosionLife: 16
             });
@@ -726,6 +726,7 @@ export default function GameCanvas({
       for (let i = entities.meteors.length - 1; i >= 0; i--) {
         const m = entities.meteors[i];
         m.progress += 0.045; // ความเร็วตกพอดีๆ ให้เห็นวงเตือนชัดเจน
+        if (m.progress < 0) continue;
         const currX = m.startX + (m.targetX - m.startX) * m.progress;
         const currY = m.startY + (m.targetY - m.startY) * m.progress;
 

@@ -93,14 +93,15 @@ export const CARDS_DATABASE = [
     icon: '🛡️',
     color: '#06b6d4',
     getDesc: (lvl, lang = 'th') => {
+      const shields = lvl + 1;
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Creates a rotating force shield that pushes back enemies for 5s' 
-          : 'Expands shield radius and enhances knockback force';
+          ? 'Creates 1 rotating force shield pushing back enemies for 5s' 
+          : `Adds 1 shield (total ${shields} shields) and expands rotation radius`;
       }
       return lvl === 0 
-        ? 'สร้างบาเรียผลักมอนสเตอร์ ทำงาน 5 วิ แล้วคูลดาวน์' 
-        : 'บาเรียหมุนกว้างขึ้น และผลักศัตรูแรงขึ้น';
+        ? 'สร้างบาเรียผลักมอนสเตอร์ 1 ชิ้น ทำงาน 5 วิ แล้วคูลดาวน์' 
+        : `เพิ่มบาเรียเป็น ${shields} ชิ้น หมุนกว้างขึ้นและคุ้มกันรอบทิศทาง`;
     }
   },
 
@@ -185,14 +186,16 @@ export const CARDS_DATABASE = [
     icon: '☄️',
     color: '#f97316',
     getDesc: (lvl, lang = 'th') => {
+      const count = lvl + 1;
+      const dmg = 200 + (count * 50);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Drops a massive meteor dealing 250% AoE blast damage' 
-          : `Increases meteor damage to ${(lvl + 1) * 150 + 100}% with wider blast`;
+          ? 'Drops 1 massive meteor dealing 250% AoE blast damage' 
+          : `Drops ${count} meteors simultaneously (${dmg}% AoE dmg each)`;
       }
       return lvl === 0 
-        ? 'สุ่มทิ้งอุกกาบาตระเบิดพื้นที่กว้าง ดาเมจ 250%' 
-        : `เพิ่มดาเมจระเบิดเป็น ${(lvl + 1) * 150 + 100}% และขยายวงกว้างขึ้น`;
+        ? 'สุ่มทิ้งอุกกาบาตเพลิง 1 ลูก ดาเมจระเบิดกว้าง 250%' 
+        : `ถล่มเป็นฝนดาวตก ${count} ลูกพร้อมกัน (ดาเมจลูกละ ${dmg}%)`;
     }
   },
   {
