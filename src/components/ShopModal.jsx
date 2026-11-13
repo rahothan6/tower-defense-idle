@@ -72,7 +72,6 @@ export default function ShopModal({
         flexDirection: 'column',
         width: '100%',
         maxWidth: '340px',
-        height: '100%',
         margin: 'auto 0'
       }}>
 
@@ -258,10 +257,9 @@ export default function ShopModal({
           </button>
         </div>
 
-        {/* Tab Content Area (Scrollable within 340px column) */}
+        {/* Tab Content Area (Consistent height scrollable to match Home Screen) */}
         <div style={{
-          flex: 1,
-          minHeight: 0,
+          height: '270px',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
