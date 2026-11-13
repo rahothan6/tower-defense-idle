@@ -87,7 +87,8 @@ export default function GameCanvas({
     laserDroneBeams: [],
     repairDroneAngle: 0,
     repairDroneTimer: 0,
-    repairBeams: []
+    repairBeams: [],
+    particles: []
   });
 
   const towerStatsRef = useRef(towerStats);
@@ -162,6 +163,7 @@ export default function GameCanvas({
       gameEntitiesRef.current.repairDroneAngle = 0;
       gameEntitiesRef.current.repairDroneTimer = 0;
       gameEntitiesRef.current.repairBeams = [];
+      gameEntitiesRef.current.particles = [];
     }
   }, [wave, towerStats.maxHp]);
 
@@ -181,6 +183,8 @@ export default function GameCanvas({
     window.addEventListener('resize', handleResize);
 
     const entities = gameEntitiesRef.current;
+    if (!entities.particles) entities.particles = [];
+    if (!entities.laserDroneBeams) entities.laserDroneBeams = [];
     let animationFrameId;
 
     const loop = (timestamp) => {
@@ -1743,6 +1747,27 @@ export default function GameCanvas({
         ctx.restore();
 
         if (dt.alpha <= 0) entities.damageTexts.splice(i, 1);
+      }
+
+      // วาดอนุภาคประกายเวท / ประกายไฟฟ้า (Magic & Electric Particles)
+      if (entities.particles && entities.particles.length > 0) {
+        for (let i = entities.particles.length - 1; i >= 0; i--) {
+          const p = entities.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life--;
+          const progress = Math.max(0, p.life / (p.maxLife || 14));
+          ctx.save();
+          ctx.globalAlpha = progress;
+          ctx.fillStyle = p.color || '#38bdf8';
+          ctx.shadowColor = p.color || '#38bdf8';
+          ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size || 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          if (p.life <= 0) entities.particles.splice(i, 1);
+        }
       }
 
       // 12. วาดจอมเวท High Wizard ตรงกลาง (แทนป้อม)
