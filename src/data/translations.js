@@ -47,7 +47,9 @@ export const TRANSLATIONS = {
     highScoreHeader: 'สถิติสูงสุด',
     noLeaderboardData: 'ยังไม่มีข้อมูล',
     playAgain: 'เล่นใหม่อีกรอบ 🔄',
-    goHome: 'กลับหน้าแรก 🏠'
+    goHome: 'กลับหน้าแรก 🏠',
+    shopBtn: '🛍️ ร้านค้าสกิน & ปลดช่อง',
+    gemsLabel: 'อัญมณี'
   },
   en: {
     // Start / Home Screen
@@ -97,6 +99,8 @@ export const TRANSLATIONS = {
     highScoreHeader: 'Best Record',
     noLeaderboardData: 'No records yet',
     playAgain: 'Play Again 🔄',
-    goHome: 'Main Menu 🏠'
+    goHome: 'Main Menu 🏠',
+    shopBtn: '🛍️ Shop & Slots',
+    gemsLabel: 'Gems'
   }
 };

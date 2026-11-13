@@ -40,6 +40,8 @@ export default function GameCanvas({
   wave, 
   skills, 
   isPaused,
+  equippedWizardSkin = 'classic',
+  equippedBulletSkin = 'magic_missile',
   onGameOver, 
   onEnemyKilled, 
   onTowerDamaged,
@@ -91,6 +93,8 @@ export default function GameCanvas({
   const waveRef = useRef(wave);
   const skillsRef = useRef(skills);
   const isPausedRef = useRef(isPaused);
+  const wizardSkinRef = useRef(equippedWizardSkin);
+  const bulletSkinRef = useRef(equippedBulletSkin);
 
   const callbacksRef = useRef({
     onGameOver,
@@ -113,11 +117,13 @@ export default function GameCanvas({
     waveRef.current = wave;
     skillsRef.current = skills;
     isPausedRef.current = isPaused;
+    wizardSkinRef.current = equippedWizardSkin;
+    bulletSkinRef.current = equippedBulletSkin;
     // ซิงค์เลือดป้อมหากมีการฟื้นฟูเลือด (Vampiric Core) หรืออัปเกรด Max HP จากภายนอก
     if (towerStats.hp > gameEntitiesRef.current.towerCurrentHp) {
       gameEntitiesRef.current.towerCurrentHp = towerStats.hp;
     }
-  }, [towerStats, wave, skills, isPaused]);
+  }, [towerStats, wave, skills, isPaused, equippedWizardSkin, equippedBulletSkin]);
 
   // รีเซ็ตสนามเมื่อเริ่มเกมใหม่ที่ Wave 1
   useEffect(() => {
@@ -193,6 +199,36 @@ export default function GameCanvas({
       const currentSkills = skillsRef.current || {};
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
+      const currentWizardSkin = wizardSkinRef.current || 'classic';
+      const currentBulletSkin = bulletSkinRef.current || 'magic_missile';
+
+      const handleKillReward = (enemy) => {
+        let gems = 0;
+        if (enemy.isBoss) {
+          // Boss: 100% chance drop 2-4 gems
+          gems = Math.floor(Math.random() * 3) + 2;
+        } else if (enemy.isMiniBoss) {
+          // Mini-boss: 60% chance drop 1-2 gems
+          if (Math.random() < 0.6) {
+            gems = Math.floor(Math.random() * 2) + 1;
+          }
+        }
+
+        if (gems > 0) {
+          entities.damageTexts.push({
+            x: enemy.x,
+            y: enemy.y - 18,
+            text: `+💎 ${gems} Gem${gems > 1 ? 's' : ''}!`,
+            isCrit: true,
+            alpha: 1.0,
+            vy: -1.2,
+            color: '#60a5fa'
+          });
+        }
+
+        onEnemyKilled(enemy.rewardCoins || 10, gems);
+      };
 
       // ตัวคูณจาก Passive Cards
       const durationMult = 1 + (currentSkills.time_extension || 0) * 0.3;
@@ -317,7 +353,7 @@ export default function GameCanvas({
 
             if (e.hp <= 0) {
               entities.enemies.splice(j, 1);
-              onEnemyKilled(e.rewardCoins || 10);
+              handleKillReward(e);
             }
           }
         }
@@ -374,7 +410,7 @@ export default function GameCanvas({
             target.hitFlashTimer = 3;
             if (target.hp <= 0) {
               entities.enemies.splice(k, 1);
-              onEnemyKilled(target.rewardCoins || 10);
+              handleKillReward(target);
             }
           }
         }
@@ -533,7 +569,7 @@ export default function GameCanvas({
             if (Math.random() < 0.08) e.hitFlashTimer = 2;
             if (e.hp <= 0) {
               entities.enemies.splice(k, 1);
-              onEnemyKilled(e.rewardCoins || 10);
+              handleKillReward(e);
               triggerSpellKillExplosion(e.x, e.y);
             }
           }
@@ -596,7 +632,7 @@ export default function GameCanvas({
 
                 if (e.hp <= 0) {
                   entities.enemies.splice(j, 1);
-                  onEnemyKilled(e.rewardCoins || 10);
+                  handleKillReward(e);
                   triggerSpellKillExplosion(e.x, e.y);
                 }
               }
@@ -678,7 +714,7 @@ export default function GameCanvas({
 
             if (e.hp <= 0) {
               entities.enemies.splice(j, 1);
-              onEnemyKilled(e.rewardCoins || 10);
+              handleKillReward(e);
               triggerSpellKillExplosion(e.x, e.y);
             }
           }
@@ -812,7 +848,7 @@ export default function GameCanvas({
               });
               if (e.hp <= 0) {
                 entities.enemies.splice(j, 1);
-                onEnemyKilled(e.rewardCoins || 10);
+                handleKillReward(e);
                 triggerSpellKillExplosion(e.x, e.y);
               }
             }
@@ -898,7 +934,7 @@ export default function GameCanvas({
 
                 if (e.hp <= 0) {
                   entities.enemies.splice(j, 1);
-                  onEnemyKilled(e.rewardCoins || 10);
+                  handleKillReward(e);
                 }
               }
             }
@@ -953,7 +989,7 @@ export default function GameCanvas({
               const idx = entities.enemies.indexOf(bossTarget);
               if (idx !== -1) {
                 entities.enemies.splice(idx, 1);
-                onEnemyKilled(bossTarget.rewardCoins || 10);
+                handleKillReward(bossTarget);
               }
             }
           }
@@ -1015,15 +1051,33 @@ export default function GameCanvas({
           ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // Soul Strike Magic Missile
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = b.isCrit ? '#f59e0b' : '#38bdf8';
-          ctx.shadowBlur = 8;
+          // Bullet skin visual styling
+          let bulletGlow = b.isCrit ? '#f59e0b' : '#38bdf8';
+          let bulletTrail = b.isCrit ? '#fbbf24' : (entities.isGatlingActive ? '#facc15' : '#38bdf8');
+          let bulletHead = '#ffffff';
+
+          if (currentBulletSkin === 'fireball') {
+            bulletGlow = b.isCrit ? '#facc15' : '#ef4444';
+            bulletTrail = b.isCrit ? '#fbbf24' : '#f97316';
+            bulletHead = '#fef08a';
+          } else if (currentBulletSkin === 'frost_shard') {
+            bulletGlow = b.isCrit ? '#facc15' : '#06b6d4';
+            bulletTrail = b.isCrit ? '#fbbf24' : '#22d3ee';
+            bulletHead = '#ffffff';
+          } else if (currentBulletSkin === 'void_sphere') {
+            bulletGlow = b.isCrit ? '#facc15' : '#a855f7';
+            bulletTrail = b.isCrit ? '#fbbf24' : '#d946ef';
+            bulletHead = '#f5d0fe';
+          }
+
+          ctx.fillStyle = bulletHead;
+          ctx.shadowColor = bulletGlow;
+          ctx.shadowBlur = 9;
           ctx.beginPath();
           ctx.arc(b.x, b.y, b.isCrit ? 5.5 : 4, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = b.isCrit ? '#fbbf24' : (entities.isGatlingActive ? '#facc15' : '#38bdf8');
+          ctx.fillStyle = bulletTrail;
           ctx.beginPath();
           ctx.arc(b.x - b.vx * 0.006, b.y - b.vy * 0.006, b.isCrit ? 4 : 2.8, 0, Math.PI * 2);
           ctx.fill();
@@ -1121,7 +1175,7 @@ export default function GameCanvas({
 
             if (e.hp <= 0) {
               entities.enemies.splice(j, 1);
-              onEnemyKilled(e.rewardCoins || 10);
+              handleKillReward(e);
             }
             break;
           }
@@ -1232,7 +1286,7 @@ export default function GameCanvas({
                 e.hitFlashTimer = 2;
                 if (e.hp <= 0) {
                   entities.enemies.splice(j, 1);
-                  onEnemyKilled(e.rewardCoins || 10);
+                  handleKillReward(e);
                 }
               }
             }
@@ -1297,7 +1351,7 @@ export default function GameCanvas({
                 const idx = entities.enemies.indexOf(closeTarget);
                 if (idx !== -1) {
                   entities.enemies.splice(idx, 1);
-                  onEnemyKilled(closeTarget.rewardCoins || 10);
+                  handleKillReward(closeTarget);
                 }
               }
             }
@@ -1476,7 +1530,7 @@ export default function GameCanvas({
             });
 
             if (e.hp <= 0) {
-              onEnemyKilled(e.rewardCoins || 10);
+              handleKillReward(e);
             }
           }
 
@@ -1521,7 +1575,7 @@ export default function GameCanvas({
 
       // 12. วาดจอมเวท High Wizard ตรงกลาง (แทนป้อม)
       const isCasting = (timestamp - entities.lastShotTime < 180);
-      drawHighWizard(ctx, centerX, centerY, 1.6, isCasting, entities.lastTargetAngle || 0);
+      drawHighWizard(ctx, centerX, centerY, 1.6, isCasting, entities.lastTargetAngle || 0, currentWizardSkin);
 
       // วงแหวนออร่าสีทองขณะ Gatling Overdrive ทำงาน
       if (entities.isGatlingActive) {

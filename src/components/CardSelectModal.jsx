@@ -97,6 +97,8 @@ export default function CardSelectModal({
   onUseReroll, 
   onSelectCard,
   onRestartGame,
+  maxActiveSlots = 4,
+  maxPassiveSlots = 4,
   lang = 'th'
 }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
@@ -117,8 +119,8 @@ export default function CardSelectModal({
     if (currentLvl >= MAX_CARD_LEVEL) return false;
 
     if (currentLvl === 0) {
-      if (card.type === CARD_TYPES.ACTIVE && activeCount >= MAX_SLOTS) return false;
-      if (card.type === CARD_TYPES.PASSIVE && passiveCount >= MAX_SLOTS) return false;
+      if (card.type === CARD_TYPES.ACTIVE && activeCount >= maxActiveSlots) return false;
+      if (card.type === CARD_TYPES.PASSIVE && passiveCount >= maxPassiveSlots) return false;
     }
     return true;
   });

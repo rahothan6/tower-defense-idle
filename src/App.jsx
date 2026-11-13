@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, addDoc, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import GameCanvas from './components/GameCanvas';
 import UpgradePanel from './components/UpgradePanel';
 import LeaderboardModal from './components/LeaderboardModal';
 import CardSelectModal from './components/CardSelectModal';
 import InventoryBar from './components/InventoryBar';
+import ShopModal from './components/ShopModal';
 import { TRANSLATIONS } from './data/translations';
 import { GAME_VERSION } from './config/version';
 
@@ -32,6 +33,59 @@ export default function App() {
   const [personalBest, setPersonalBest] = useState(() => {
     return parseInt(localStorage.getItem('idle_personal_best') || '1', 10);
   });
+
+  // Meta-Progression: Gems, Save ID, Slots, and Skins
+  const [gems, setGems] = useState(() => {
+    return parseInt(localStorage.getItem('idle_game_gems') || '0', 10);
+  });
+
+  const [saveId, setSaveId] = useState(() => {
+    let existing = localStorage.getItem('idle_player_save_id');
+    if (!existing) {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let id = 'WIZ-';
+      for (let i = 0; i < 4; i++) {
+        id += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      existing = id;
+      localStorage.setItem('idle_player_save_id', existing);
+    }
+    return existing;
+  });
+
+  const [unlockedActiveSlots, setUnlockedActiveSlots] = useState(() => {
+    return parseInt(localStorage.getItem('idle_active_slots') || '4', 10);
+  });
+
+  const [unlockedPassiveSlots, setUnlockedPassiveSlots] = useState(() => {
+    return parseInt(localStorage.getItem('idle_passive_slots') || '4', 10);
+  });
+
+  const [equippedWizardSkin, setEquippedWizardSkin] = useState(() => {
+    return localStorage.getItem('idle_equipped_wizard_skin') || 'classic';
+  });
+
+  const [equippedBulletSkin, setEquippedBulletSkin] = useState(() => {
+    return localStorage.getItem('idle_equipped_bullet_skin') || 'magic_missile';
+  });
+
+  const [ownedWizardSkins, setOwnedWizardSkins] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('idle_owned_wizard_skins') || '["classic"]');
+    } catch {
+      return ['classic'];
+    }
+  });
+
+  const [ownedBulletSkins, setOwnedBulletSkins] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('idle_owned_bullet_skins') || '["magic_missile"]');
+    } catch {
+      return ['magic_missile'];
+    }
+  });
+
+  const [isShopOpen, setIsShopOpen] = useState(false);
 
   const [leaders, setLeaders] = useState([]);
   const [loadingLeaders, setLoadingLeaders] = useState(true);
@@ -164,8 +218,40 @@ export default function App() {
     setRerollsLeft(prev => Math.max(0, prev - 1));
   };
 
-  const handleEnemyKilled = (reward) => {
+  // ซิงค์ข้อมูลเซฟขึ้น Cloud Firestore อัตโนมัติภายใต้ Save ID
+  const syncSaveToCloud = async (overrideData = {}) => {
+    if (!db || !saveId) return;
+    try {
+      const currentSave = {
+        saveId,
+        playerName: playerName.trim() || 'Player',
+        gems: overrideData.gems !== undefined ? overrideData.gems : gems,
+        unlockedActiveSlots: overrideData.unlockedActiveSlots !== undefined ? overrideData.unlockedActiveSlots : unlockedActiveSlots,
+        unlockedPassiveSlots: overrideData.unlockedPassiveSlots !== undefined ? overrideData.unlockedPassiveSlots : unlockedPassiveSlots,
+        equippedWizardSkin: overrideData.equippedWizardSkin || equippedWizardSkin,
+        equippedBulletSkin: overrideData.equippedBulletSkin || equippedBulletSkin,
+        ownedWizardSkins: overrideData.ownedWizardSkins || ownedWizardSkins,
+        ownedBulletSkins: overrideData.ownedBulletSkins || ownedBulletSkins,
+        personalBest,
+        lastUpdated: serverTimestamp()
+      };
+      await setDoc(doc(db, 'player_saves', saveId), currentSave, { merge: true });
+    } catch (err) {
+      console.warn("Cloud save sync error:", err);
+    }
+  };
+
+  const handleEnemyKilled = (reward, gemsEarned = 0) => {
     setCoins((c) => c + reward);
+
+    if (gemsEarned > 0) {
+      setGems(prev => {
+        const next = prev + gemsEarned;
+        localStorage.setItem('idle_game_gems', next.toString());
+        syncSaveToCloud({ gems: next });
+        return next;
+      });
+    }
 
     const vampLevel = skills.vampiric || 0;
     if (vampLevel > 0) {
@@ -173,6 +259,116 @@ export default function App() {
         ...prev,
         hp: Math.min(prev.maxHp, prev.hp + vampLevel * 2)
       }));
+    }
+  };
+
+  const handleBuyOrEquipSkin = (type, skinId, cost = 0) => {
+    if (type === 'wizard') {
+      const alreadyOwned = ownedWizardSkins.includes(skinId);
+      if (!alreadyOwned) {
+        if (gems < cost) return;
+        const nextGems = gems - cost;
+        const nextOwned = [...ownedWizardSkins, skinId];
+        setGems(nextGems);
+        localStorage.setItem('idle_game_gems', nextGems.toString());
+        setOwnedWizardSkins(nextOwned);
+        localStorage.setItem('idle_owned_wizard_skins', JSON.stringify(nextOwned));
+        setEquippedWizardSkin(skinId);
+        localStorage.setItem('idle_equipped_wizard_skin', skinId);
+        syncSaveToCloud({ gems: nextGems, ownedWizardSkins: nextOwned, equippedWizardSkin: skinId });
+      } else {
+        setEquippedWizardSkin(skinId);
+        localStorage.setItem('idle_equipped_wizard_skin', skinId);
+        syncSaveToCloud({ equippedWizardSkin: skinId });
+      }
+    } else {
+      const alreadyOwned = ownedBulletSkins.includes(skinId);
+      if (!alreadyOwned) {
+        if (gems < cost) return;
+        const nextGems = gems - cost;
+        const nextOwned = [...ownedBulletSkins, skinId];
+        setGems(nextGems);
+        localStorage.setItem('idle_game_gems', nextGems.toString());
+        setOwnedBulletSkins(nextOwned);
+        localStorage.setItem('idle_owned_bullet_skins', JSON.stringify(nextOwned));
+        setEquippedBulletSkin(skinId);
+        localStorage.setItem('idle_equipped_bullet_skin', skinId);
+        syncSaveToCloud({ gems: nextGems, ownedBulletSkins: nextOwned, equippedBulletSkin: skinId });
+      } else {
+        setEquippedBulletSkin(skinId);
+        localStorage.setItem('idle_equipped_bullet_skin', skinId);
+        syncSaveToCloud({ equippedBulletSkin: skinId });
+      }
+    }
+  };
+
+  const handleUnlockSlot = (type, slotNum, cost) => {
+    if (gems < cost) return;
+    const nextGems = gems - cost;
+    setGems(nextGems);
+    localStorage.setItem('idle_game_gems', nextGems.toString());
+
+    if (type === 'active') {
+      setUnlockedActiveSlots(slotNum);
+      localStorage.setItem('idle_active_slots', slotNum.toString());
+      syncSaveToCloud({ gems: nextGems, unlockedActiveSlots: slotNum });
+    } else {
+      setUnlockedPassiveSlots(slotNum);
+      localStorage.setItem('idle_passive_slots', slotNum.toString());
+      syncSaveToCloud({ gems: nextGems, unlockedPassiveSlots: slotNum });
+    }
+  };
+
+  const handleRestoreSave = async (inputCode) => {
+    if (!db) return { success: false, message: 'Database not connected' };
+    const cleanCode = inputCode.trim().toUpperCase();
+    try {
+      const docSnap = await getDoc(doc(db, 'player_saves', cleanCode));
+      if (!docSnap.exists()) {
+        return { 
+          success: false, 
+          message: lang === 'th' ? 'ไม่พบข้อมูลเซฟสำหรับรหัสนี้' : 'Save data not found for this code' 
+        };
+      }
+      const data = docSnap.data();
+      setSaveId(cleanCode);
+      localStorage.setItem('idle_player_save_id', cleanCode);
+
+      if (data.gems !== undefined) {
+        setGems(data.gems);
+        localStorage.setItem('idle_game_gems', data.gems.toString());
+      }
+      if (data.unlockedActiveSlots) {
+        setUnlockedActiveSlots(data.unlockedActiveSlots);
+        localStorage.setItem('idle_active_slots', data.unlockedActiveSlots.toString());
+      }
+      if (data.unlockedPassiveSlots) {
+        setUnlockedPassiveSlots(data.unlockedPassiveSlots);
+        localStorage.setItem('idle_passive_slots', data.unlockedPassiveSlots.toString());
+      }
+      if (data.equippedWizardSkin) {
+        setEquippedWizardSkin(data.equippedWizardSkin);
+        localStorage.setItem('idle_equipped_wizard_skin', data.equippedWizardSkin);
+      }
+      if (data.equippedBulletSkin) {
+        setEquippedBulletSkin(data.equippedBulletSkin);
+        localStorage.setItem('idle_equipped_bullet_skin', data.equippedBulletSkin);
+      }
+      if (data.ownedWizardSkins) {
+        setOwnedWizardSkins(data.ownedWizardSkins);
+        localStorage.setItem('idle_owned_wizard_skins', JSON.stringify(data.ownedWizardSkins));
+      }
+      if (data.ownedBulletSkins) {
+        setOwnedBulletSkins(data.ownedBulletSkins);
+        localStorage.setItem('idle_owned_bullet_skins', JSON.stringify(data.ownedBulletSkins));
+      }
+      return { 
+        success: true, 
+        message: lang === 'th' ? `กู้คืนข้อมูลเซฟ ${cleanCode} สำเร็จแล้ว!` : `Restored save ${cleanCode} successfully!` 
+      };
+    } catch (err) {
+      console.error("Restore error:", err);
+      return { success: false, message: err.message };
     }
   };
 
@@ -255,8 +451,28 @@ export default function App() {
             maxWidth: '340px',
             margin: 'auto 0'
           }}>
-            {/* สลับภาษา [ TH | EN ] */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginBottom: '10px' }}>
+            {/* แถบด้านบนหน้าแรก: แสดง Gem และ ปุ่มสลับภาษา */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '10px' }}>
+              <div
+                onClick={() => setIsShopOpen(true)}
+                title={lang === 'th' ? 'แตะเพื่อเปิดร้านค้า' : 'Tap to open shop'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: 'rgba(30, 58, 138, 0.45)',
+                  border: '1px solid rgba(59, 130, 246, 0.45)',
+                  padding: '3px 9px',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '13px' }}>💎</span>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#93c5fd', fontFamily: 'monospace' }}>
+                  {gems}
+                </span>
+              </div>
+
               <div style={{
                 display: 'inline-flex',
                 backgroundColor: '#1e293b',
@@ -322,6 +538,32 @@ export default function App() {
                 >
                   {t.startGame}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsShopOpen(true)}
+                  style={{
+                    width: '100%',
+                    padding: '9px',
+                    borderRadius: '10px',
+                    border: '1px solid #3b82f6',
+                    backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                    color: '#93c5fd',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    marginTop: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>{t.shopBtn}</span>
+                  <span style={{ fontSize: '11px', color: '#fbbf24', backgroundColor: 'rgba(0,0,0,0.4)', padding: '1px 6px', borderRadius: '4px' }}>
+                    💎 {gems}
+                  </span>
+                </button>
               </form>
             </div>
 
@@ -372,7 +614,27 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '13px' }}>
               <span style={{ color: '#fbbf24' }}>🟡 {coins.toLocaleString()}</span>
+              <span style={{ color: '#c084fc' }}>💎 {gems}</span>
               <span style={{ color: '#f87171' }}>❤️ {Math.max(0, Math.round(towerStats.hp))}</span>
+              <button
+                onClick={() => setIsShopOpen(true)}
+                title={t.shopBtn}
+                style={{
+                  backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                  border: '1px solid rgba(59, 130, 246, 0.5)',
+                  color: '#93c5fd',
+                  borderRadius: '6px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontWeight: 'bold'
+                }}
+              >
+                🛍️
+              </button>
               <button
                 onClick={() => {
                   if (window.confirm(t.restartConfirm)) {
@@ -411,7 +673,11 @@ export default function App() {
             zIndex: 110,
             transition: 'border-color 0.2s, box-shadow 0.2s'
           }}>
-            <InventoryBar skills={skills} />
+            <InventoryBar 
+              skills={skills} 
+              maxActiveSlots={unlockedActiveSlots} 
+              maxPassiveSlots={unlockedPassiveSlots} 
+            />
           </div>
 
           <main style={{
@@ -428,6 +694,8 @@ export default function App() {
               wave={wave}
               skills={skills}
               isPaused={isPickingCard}
+              equippedWizardSkin={equippedWizardSkin}
+              equippedBulletSkin={equippedBulletSkin}
               onGameOver={() => setIsGameOver(true)}
               onEnemyKilled={handleEnemyKilled}
               onTowerDamaged={handleTowerDamaged}
@@ -452,6 +720,8 @@ export default function App() {
               wave={wave}
               currentSkills={skills}
               rerollsLeft={rerollsLeft}
+              maxActiveSlots={unlockedActiveSlots}
+              maxPassiveSlots={unlockedPassiveSlots}
               onUseReroll={handleUseReroll}
               onSelectCard={handleCardSelected}
               onRestartGame={handleRestart}
@@ -465,13 +735,33 @@ export default function App() {
               wave={wave} 
               onRestart={handleRestart}
               onGoHome={handleGoHome}
+              onOpenShop={() => setIsShopOpen(true)}
               lang={lang}
             />
           )}
         </>
       )}
 
-      {/* Version Tag */}
+      {/* Shop Modal */}
+      {isShopOpen && (
+        <ShopModal
+          gems={gems}
+          saveId={saveId}
+          unlockedActiveSlots={unlockedActiveSlots}
+          unlockedPassiveSlots={unlockedPassiveSlots}
+          equippedWizardSkin={equippedWizardSkin}
+          equippedBulletSkin={equippedBulletSkin}
+          ownedWizardSkins={ownedWizardSkins}
+          ownedBulletSkins={ownedBulletSkins}
+          onBuyOrEquipSkin={handleBuyOrEquipSkin}
+          onUnlockSlot={handleUnlockSlot}
+          onRestoreSave={handleRestoreSave}
+          onClose={() => setIsShopOpen(false)}
+          lang={lang}
+        />
+      )}
+
+      {/* Version Tag with Save ID (Tap to Copy) */}
       <div style={{
         position: 'absolute',
         bottom: '6px',
@@ -480,12 +770,27 @@ export default function App() {
         fontFamily: 'monospace',
         color: '#64748b',
         letterSpacing: '0.5px',
-        pointerEvents: 'none',
         zIndex: 50,
         userSelect: 'none',
-        opacity: 0.75
+        opacity: 0.9,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
       }}>
-        {GAME_VERSION}
+        <span>{GAME_VERSION}</span>
+        <span>•</span>
+        <span
+          onClick={() => {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(saveId);
+              alert(lang === 'th' ? `คัดลอกรหัสเซฟ ${saveId} เรียบร้อยแล้ว!` : `Copied Save ID ${saveId}!`);
+            }
+          }}
+          title={lang === 'th' ? "คลิกเพื่อคัดลอกรหัสเซฟ" : "Click to copy Save ID"}
+          style={{ cursor: 'pointer', color: '#93c5fd', textDecoration: 'underline' }}
+        >
+          ID: {saveId}
+        </span>
       </div>
     </div>
   );

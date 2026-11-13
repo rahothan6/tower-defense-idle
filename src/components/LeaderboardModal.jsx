@@ -3,7 +3,7 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { TRANSLATIONS } from '../data/translations';
 
-export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome, lang = 'th' }) {
+export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome, onOpenShop, lang = 'th' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.th;
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,6 +122,31 @@ export default function LeaderboardModal({ playerName, wave, onRestart, onGoHome
         >
           {t.playAgain}
         </button>
+
+        {/* ปุ่มไปร้านค้า */}
+        {onOpenShop && (
+          <button
+            onClick={onOpenShop}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: 'rgba(37, 99, 235, 0.15)',
+              color: '#93c5fd',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              border: '1px solid #3b82f6',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            {t.shopBtn}
+          </button>
+        )}
 
         {/* ปุ่มกลับหน้าแรก */}
         <button

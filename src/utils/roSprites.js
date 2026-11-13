@@ -12,13 +12,66 @@
 // ==========================================
 // 1. HIGH WIZARD HERO (แทนป้อมตรงกลาง)
 // ==========================================
-export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
+export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0, skinId = 'classic') {
   ctx.save();
   ctx.translate(cx, cy);
 
   const pSize = scale;
   const t = Date.now();
   const castBob = isCasting ? -1.5 * pSize : Math.sin(t * 0.005) * 1.5;
+
+  const skinPalettes = {
+    classic: {
+      cape: '#1e1b4b',
+      robe: '#2563eb',
+      hatBase: '#1d4ed8',
+      hatTop: '#1e40af',
+      crystal: '#38bdf8',
+      hair: '#fde047',
+      aura: null
+    },
+    crimson: {
+      cape: '#4c0519',
+      robe: '#e11d48',
+      hatBase: '#be123c',
+      hatTop: '#9f1239',
+      crystal: '#f97316',
+      hair: '#ea580c',
+      aura: '#ef4444'
+    },
+    void: {
+      cape: '#180424',
+      robe: '#581c87',
+      hatBase: '#3b0764',
+      hatTop: '#2e1065',
+      crystal: '#c084fc',
+      hair: '#e2e8f0',
+      aura: '#a855f7'
+    },
+    golden: {
+      cape: '#451a03',
+      robe: '#f59e0b',
+      hatBase: '#d97706',
+      hatTop: '#b45309',
+      crystal: '#fef08a',
+      hair: '#ffffff',
+      aura: '#fbbf24'
+    }
+  };
+  const pal = skinPalettes[skinId] || skinPalettes.classic;
+
+  // 0. Special Aura (for unlocked skins)
+  if (pal.aura) {
+    ctx.save();
+    ctx.shadowColor = pal.aura;
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = pal.aura;
+    ctx.lineWidth = 1.2 * pSize;
+    ctx.beginPath();
+    ctx.ellipse(0, 16.5 * pSize, (11 + Math.sin(t * 0.006) * 2) * pSize, 4 * pSize, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   // 1. Soft Ground Shadow
   ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
@@ -31,8 +84,8 @@ export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
   ctx.fillRect(-5 * pSize, 14.5 * pSize, 3.8 * pSize, 2.5 * pSize);
   ctx.fillRect(1.5 * pSize, 14.5 * pSize, 3.8 * pSize, 2.5 * pSize);
 
-  // 3. Wizard Cape (Dark Navy/Purple)
-  ctx.fillStyle = '#1e1b4b';
+  // 3. Wizard Cape
+  ctx.fillStyle = pal.cape;
   ctx.beginPath();
   ctx.moveTo(-9 * pSize, 0 + castBob);
   ctx.lineTo(-11 * pSize, 16 * pSize);
@@ -40,8 +93,8 @@ export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
   ctx.lineTo(7 * pSize, 0 + castBob);
   ctx.fill();
 
-  // 4. Wizard Robe (Blue with Gold Hem)
-  ctx.fillStyle = '#2563eb';
+  // 4. Wizard Robe
+  ctx.fillStyle = pal.robe;
   ctx.beginPath();
   ctx.moveTo(-6 * pSize, 2 * pSize + castBob);
   ctx.lineTo(-7 * pSize, 15 * pSize);
@@ -72,19 +125,19 @@ export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
   ctx.fillRect((-2.5 + eyeOffset) * pSize, -2.6 * pSize + castBob, 0.8 * pSize, 1.0 * pSize);
   ctx.fillRect((2.0 + eyeOffset) * pSize, -2.6 * pSize + castBob, 0.8 * pSize, 1.0 * pSize);
 
-  // Hair (Blonde)
-  ctx.fillStyle = '#fde047';
+  // Hair
+  ctx.fillStyle = pal.hair;
   ctx.fillRect(-5 * pSize, -7 * pSize + castBob, 10 * pSize, 2.5 * pSize);
   ctx.fillRect(-6 * pSize, -5 * pSize + castBob, 2 * pSize, 5 * pSize);
   ctx.fillRect(4 * pSize, -5 * pSize + castBob, 2 * pSize, 5 * pSize);
 
   // 6. Iconic Pointy Wizard Hat
-  ctx.fillStyle = '#1d4ed8';
+  ctx.fillStyle = pal.hatBase;
   ctx.beginPath();
   ctx.ellipse(0, -7 * pSize + castBob, 12 * pSize, 3.5 * pSize, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = '#1e40af';
+  ctx.fillStyle = pal.hatTop;
   ctx.beginPath();
   ctx.moveTo(-6 * pSize, -7 * pSize + castBob);
   ctx.quadraticCurveTo(0, -22 * pSize + castBob, 5 * pSize, -24 * pSize + castBob);
@@ -123,8 +176,8 @@ export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
   ctx.stroke();
 
   // Glowing Mana Crystal
-  ctx.fillStyle = isCasting ? '#ffffff' : '#38bdf8';
-  ctx.shadowColor = '#38bdf8';
+  ctx.fillStyle = isCasting ? '#ffffff' : pal.crystal;
+  ctx.shadowColor = pal.crystal;
   ctx.shadowBlur = isCasting ? 18 : 8;
   ctx.beginPath();
   ctx.arc(0, -18 * pSize, isCasting ? 3.8 * pSize : 2.6 * pSize, 0, Math.PI * 2);
@@ -133,8 +186,8 @@ export function drawHighWizard(ctx, cx, cy, scale, isCasting, aimAngle = 0) {
 
   // Staff Muzzle Flash Spark (When Casting)
   if (isCasting) {
-    ctx.fillStyle = '#38bdf8';
-    ctx.shadowColor = '#67e8f9';
+    ctx.fillStyle = pal.crystal;
+    ctx.shadowColor = pal.crystal;
     ctx.shadowBlur = 14;
     for (let sp = 0; sp < 4; sp++) {
       const sAng = (Math.PI / 2) * sp + t * 0.02;
