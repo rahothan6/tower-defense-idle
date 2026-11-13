@@ -8,7 +8,8 @@ import {
   drawCombatFamiliar,
   drawLaserOculus,
   drawHealingFairy,
-  drawPoisonPuddleArt
+  drawPoisonPuddleArt,
+  drawMagicShield
 } from '../utils/roSprites';
 
 // วาดสายฟ้าเชื่อมตอนชิ่งกระสุน
@@ -596,38 +597,93 @@ export default function GameCanvas({
         if (f.life <= 0) entities.toxicFumes.splice(fIdx, 1);
       }
 
-      // 4. ระบบเกราะหมุน (Orbiting Shield)
+      // 4. ระบบเกราะหมุน (Orbiting Shield - Divine Crystal Aegis)
       const shieldLvl = currentSkills.orbit_shield || 0;
       if (shieldLvl > 0) {
         if (entities.isShieldActive) {
           entities.shieldActiveTimer += 16;
-          entities.shieldAngle += 0.05;
+          entities.shieldAngle += 0.052;
 
           const totalShields = shieldLvl + extraCasts;
-          const shieldDist = (55 + shieldLvl * 5) * areaMult;
+          const shieldDist = (58 + shieldLvl * 5) * areaMult;
+          const now = Date.now();
+
+          // 1. Shimmering Forcefield Barrier Ring (วงแหวนสนามพลังเชื่อมโยงทุกโล่)
+          ctx.save();
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([8, 8]);
+          ctx.lineDashOffset = -now * 0.035;
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, shieldDist, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
 
           for (let sIdx = 0; sIdx < totalShields; sIdx++) {
             const sAngle = entities.shieldAngle + (Math.PI * 2 / totalShields) * sIdx;
             const shieldX = centerX + Math.cos(sAngle) * shieldDist;
             const shieldY = centerY + Math.sin(sAngle) * shieldDist;
 
-            ctx.fillStyle = '#06b6d4';
-            ctx.beginPath();
-            ctx.arc(shieldX, shieldY, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#67e8f9';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            // หันหน้าตามแนวระนาบวงหมุน (Tangent Angle) เคลื่อนที่แบบแอโรไดนามิก
+            const facingAngle = sAngle + Math.PI / 2;
 
+            // 2. Luminous Motion Trails (หางแสงสีฟ้าครามเรืองแสงตามหลังโล่)
+            for (let tStep = 2; tStep >= 1; tStep--) {
+              const trailAngle = sAngle - (tStep * 0.07);
+              const tX = centerX + Math.cos(trailAngle) * shieldDist;
+              const tY = centerY + Math.sin(trailAngle) * shieldDist;
+              ctx.save();
+              ctx.globalAlpha = 0.24 / tStep;
+              drawMagicShield(ctx, tX, tY, trailAngle + Math.PI / 2, 0.85, now);
+              ctx.restore();
+            }
+
+            // 3. วาดโล่พลังเวทคริสตัลศักดิ์สิทธิ์ (Divine Crystal Aegis)
+            drawMagicShield(ctx, shieldX, shieldY, facingAngle, 1.05, now);
+
+            // ละอองเวทสะบัดจากตัวโล่
+            if (Math.random() < 0.12) {
+              entities.particles.push({
+                x: shieldX + (Math.random() - 0.5) * 6,
+                y: shieldY + (Math.random() - 0.5) * 6,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                life: 12,
+                maxLife: 12,
+                color: Math.random() < 0.5 ? '#38bdf8' : '#a5f3fc',
+                size: 2
+              });
+            }
+
+            // ตรวจสอบการชนและผลักกระแทกศัตรู
             for (let j = entities.enemies.length - 1; j >= 0; j--) {
               const e = entities.enemies[j];
-              if (getDistance(shieldX, shieldY, e.x, e.y) < e.radius + 12) {
+              if (getDistance(shieldX, shieldY, e.x, e.y) < e.radius + 15) {
                 e.hp -= currentStats.damage * 0.8 * spellDamageMult;
                 e.hitFlashTimer = 3;
+
+                // ประกายคลื่นพลังกระแทก (Impact Shockwave Sparks)
+                for (let p = 0; p < 4; p++) {
+                  const pAngle = Math.random() * Math.PI * 2;
+                  const pSpeed = 1.8 + Math.random() * 2.5;
+                  entities.particles.push({
+                    x: shieldX,
+                    y: shieldY,
+                    vx: Math.cos(pAngle) * pSpeed,
+                    vy: Math.sin(pAngle) * pSpeed,
+                    life: 14,
+                    maxLife: 14,
+                    color: Math.random() < 0.5 ? '#38bdf8' : '#ffffff',
+                    size: 2.5
+                  });
+                }
+
                 if (!e.isBoss && !e.isMiniBoss) {
                   const pushAngle = getAngle(centerX, centerY, e.x, e.y);
-                  e.x += Math.cos(pushAngle) * 30;
-                  e.y += Math.sin(pushAngle) * 30;
+                  e.x += Math.cos(pushAngle) * 35;
+                  e.y += Math.sin(pushAngle) * 35;
                 }
 
                 if (e.hp <= 0) {

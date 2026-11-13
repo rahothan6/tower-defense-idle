@@ -683,3 +683,87 @@ export function drawHealingFairy(ctx, x, y, scale = 1) {
 
   ctx.restore();
 }
+
+// ==========================================
+// 7. ORBITING MAGIC SHIELD (โล่พลังเวทคริสตัลศักดิ์สิทธิ์)
+// ==========================================
+export function drawMagicShield(ctx, x, y, angle, scale = 1, t = Date.now()) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  const pulse = Math.sin(t * 0.008) * 0.12;
+  const s = scale * (1 + pulse);
+
+  // 1. Outer Ethereal Barrier Arc (สนามพลังเวทรอบนอก)
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+  ctx.lineWidth = 1.8 * s;
+  ctx.shadowColor = '#00f0ff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, 17 * s, -Math.PI * 0.75, Math.PI * 0.75);
+  ctx.stroke();
+
+  // 2. Shield Rim & Shadow (ขอบโล่โลหะศักดิ์สิทธิ์)
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 14;
+
+  // Outer Shield Path (ทรงโล่เอจิสศักดิ์สิทธิ์)
+  ctx.beginPath();
+  ctx.moveTo(-11 * s, -12 * s);
+  ctx.lineTo(0, -16 * s);   // ยอดแหลมด้านบน
+  ctx.lineTo(11 * s, -12 * s);
+  ctx.lineTo(10 * s, 3 * s);
+  ctx.lineTo(0, 17 * s);    // ปลายแหลมคมด้านล่าง
+  ctx.lineTo(-10 * s, 3 * s);
+  ctx.closePath();
+
+  // Gradient fill for crystalline surface
+  const grad = ctx.createLinearGradient(0, -16 * s, 0, 17 * s);
+  grad.addColorStop(0, '#7dd3fc');
+  grad.addColorStop(0.35, '#0284c7');
+  grad.addColorStop(1, '#0c4a6e');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Shield Border Trim (ขอบขลิบสีเงินประกายฟ้า)
+  ctx.strokeStyle = '#e0f2fe';
+  ctx.lineWidth = 2 * s;
+  ctx.stroke();
+
+  // 3. Inner Crystalline Facets (รอยเหลี่ยมมุมคริสตัล 3 มิติ)
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.lineWidth = 1 * s;
+  ctx.beginPath();
+  ctx.moveTo(0, -16 * s);
+  ctx.lineTo(0, 17 * s);
+  ctx.moveTo(-11 * s, -12 * s);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(11 * s, -12 * s);
+  ctx.moveTo(-10 * s, 3 * s);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(10 * s, 3 * s);
+  ctx.stroke();
+
+  // 4. Golden Rune Trim / Cross (กางเขนทองคำศักดิ์สิทธิ์ตรงกลาง)
+  ctx.fillStyle = '#facc15';
+  ctx.shadowColor = '#fde047';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(-1.5 * s, -7 * s, 3 * s, 14 * s);
+  ctx.fillRect(-6 * s, -2.5 * s, 12 * s, 3 * s);
+
+  // 5. Central Blinding Diamond Core (คริสตัลแกนกลางสว่างจ้า)
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(0, -4 * s);
+  ctx.lineTo(3.5 * s, 0);
+  ctx.lineTo(0, 4 * s);
+  ctx.lineTo(-3.5 * s, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
