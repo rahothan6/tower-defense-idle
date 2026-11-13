@@ -75,49 +75,60 @@ export default function ShopModal({
         margin: 'auto 0'
       }}>
 
-        {/* Top Bar (Matches Home Screen Top Bar) */}
+        {/* Top Bar (Centered Title, Back on Left, Gems on Right) */}
         <div style={{
+          position: 'relative',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           width: '100%',
+          height: '36px',
           marginBottom: '10px',
           flexShrink: 0
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={onClose}
-              title={isTh ? "กลับหน้าแรก" : "Back"}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                color: '#93c5fd',
-                fontSize: '16px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: 1,
-                padding: 0
-              }}
-            >
-              ←
-            </button>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span>🛍️</span>
-                <span>{isTh ? 'ร้านค้าเวทมนตร์' : 'Magic Shop'}</span>
-              </div>
-              <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                {isTh ? 'สกินตัวละคร & ปลดช่องสกิล' : 'Skins & Slot Expansion'}
-              </div>
-            </div>
+          {/* Back button on left */}
+          <button
+            onClick={onClose}
+            title={isTh ? "กลับหน้าแรก" : "Back"}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              color: '#93c5fd',
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              lineHeight: 1,
+              padding: 0,
+              zIndex: 2
+            }}
+          >
+            ←
+          </button>
+
+          {/* Centered Title */}
+          <div style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            pointerEvents: 'none',
+            fontSize: '15px',
+            fontWeight: 'bold',
+            color: '#ffffff'
+          }}>
+            <span>🛍️</span>
+            <span>{isTh ? 'ร้านค้าเวทมนตร์' : 'Magic Shop'}</span>
           </div>
 
-          {/* Gem Badge (Identical to Home Screen Pill) */}
+          {/* Gem Badge on right */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -125,7 +136,8 @@ export default function ShopModal({
             backgroundColor: 'rgba(30, 58, 138, 0.45)',
             border: '1px solid rgba(59, 130, 246, 0.45)',
             padding: '3px 9px',
-            borderRadius: '12px'
+            borderRadius: '12px',
+            zIndex: 2
           }}>
             <span style={{ fontSize: '13px' }}>💎</span>
             <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#93c5fd', fontFamily: 'monospace' }}>
