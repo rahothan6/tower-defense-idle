@@ -544,13 +544,13 @@ export default function App() {
                   onClick={() => setIsShopOpen(true)}
                   style={{
                     width: '100%',
-                    padding: '9px',
+                    padding: '11px',
                     borderRadius: '10px',
                     border: '1px solid #3b82f6',
                     backgroundColor: 'rgba(37, 99, 235, 0.18)',
                     color: '#93c5fd',
                     fontWeight: 'bold',
-                    fontSize: '13px',
+                    fontSize: '14px',
                     cursor: 'pointer',
                     marginTop: '8px',
                     display: 'flex',
@@ -559,10 +559,7 @@ export default function App() {
                     gap: '6px'
                   }}
                 >
-                  <span>{t.shopBtn}</span>
-                  <span style={{ fontSize: '11px', color: '#93c5fd', backgroundColor: 'rgba(30, 58, 138, 0.45)', border: '1px solid rgba(59, 130, 246, 0.45)', padding: '1px 7px', borderRadius: '6px', fontFamily: 'monospace' }}>
-                    💎 {gems}
-                  </span>
+                  {t.shopBtn}
                 </button>
               </form>
             </div>
