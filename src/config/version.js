@@ -1,2 +1,2 @@
 // Game version indicator (SemVer: MAJOR.MINOR.PATCH)
-export const GAME_VERSION = 'v1.2.0';
+export const GAME_VERSION = 'v1.2.1';

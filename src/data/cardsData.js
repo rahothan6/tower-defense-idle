@@ -419,12 +419,12 @@ export const CARDS_DATABASE = [
     getDesc: (lvl, lang = 'th') => {
       if (lang === 'en') {
         return lvl === 0
-          ? 'Summons 1 lightning drone orbiting and firing continuous lasers'
-          : `Adds 1 additional drone (total ${lvl + 1} drones) with boosted dmg`;
+          ? 'Summons 1 lightning drone firing high-voltage lasers with chain lightning arcs'
+          : `Adds +1 lightning drone (total ${lvl + 1}), boosts laser dmg & chain shock power`;
       }
       return lvl === 0
-        ? 'เรียกภูตสายฟ้า 1 ตน บินวนคอยยิงเลเซอร์ใส่ศัตรู'
-        : `เพิ่มภูตสายฟ้าอีก 1 ตน (รวมเป็น ${lvl + 1} ตน) และยิงแรงขึ้น`;
+        ? 'เรียกภูตสายฟ้า 1 ตน บินวนยิงเลเซอร์ไฟฟ้าแรงสูง + ช็อตชิ่งใส่ศัตรูรอบข้าง'
+        : `เพิ่มภูตสายฟ้าอีก 1 ตน (รวมเป็น ${lvl + 1} ตน) ยิงแรงขึ้นและช็อตชิ่งรุนแรงขึ้น`;
     }
   },
   {

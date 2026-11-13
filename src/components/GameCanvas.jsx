@@ -1294,86 +1294,202 @@ export default function GameCanvas({
         }
       }
 
-      // 9.1 โดรนปืนเลเซอร์ (Laser Drone)
+      // 9.1 โดรนปืนเลเซอร์ (Laser Drone - Lightning Oculus)
       const laserDroneLvl = currentSkills.laser_drone || 0;
       if (laserDroneLvl > 0) {
-        entities.laserDroneAngle += 0.028 * droneSpeedMult;
+        entities.laserDroneAngle += 0.030 * droneSpeedMult;
         entities.laserDroneTimer += 16;
-        const laserRadius = 85 * areaMult;
+        const baseLaserRadius = 75 * areaMult;
+        const outerLaserRadius = 130 * areaMult;
+        const laserInterval = Math.max(350, (800 - laserDroneLvl * 75) * cooldownMult);
+        const shouldShoot = entities.laserDroneTimer > laserInterval && entities.enemies.length > 0;
 
-        for (let i = 0; i < laserDroneLvl; i++) {
-          const offset = (Math.PI * 2 / laserDroneLvl) * i;
-          const ldAngle = entities.laserDroneAngle + offset;
-          const ldX = centerX + Math.cos(ldAngle) * laserRadius;
-          const ldY = centerY + Math.sin(ldAngle) * laserRadius;
+        // รองรับการแยกเป็น 2 วงแหวนเมื่อมี Swarm Duplicator (drone_duplicator)
+        const totalLaserRings = hasDuplicator ? 2 : 1;
 
-          // วาดภูตสายฟ้าคริสตัล (Lightning Oculus)
-          drawLaserOculus(ctx, ldX, ldY, 1.0);
+        for (let ring = 0; ring < totalLaserRings; ring++) {
+          const currentRadius = ring === 0 ? baseLaserRadius : outerLaserRadius;
+          const ringPhaseOffset = ring === 1 ? (Math.PI / laserDroneLvl) : 0;
+          const ringDmgBonus = ring === 1 ? (1 + duplicatorLvl * 0.35) : 1.0;
 
-          // ยิงแสงเลเซอร์ใส่ศัตรูในระยะ 140px
-          const laserInterval = Math.max(600, (1300 - laserDroneLvl * 100) * cooldownMult);
-          if (entities.laserDroneTimer > laserInterval && entities.enemies.length > 0) {
-            let closeTarget = null;
-            let closeDist = 140;
+          for (let i = 0; i < laserDroneLvl; i++) {
+            const offset = (Math.PI * 2 / laserDroneLvl) * i;
+            const ldAngle = entities.laserDroneAngle + offset + ringPhaseOffset;
+            const ldX = centerX + Math.cos(ldAngle) * currentRadius;
+            const ldY = centerY + Math.sin(ldAngle) * currentRadius;
 
-            for (const e of entities.enemies) {
-              const d = getDistance(ldX, ldY, e.x, e.y);
-              if (d < closeDist) {
-                closeDist = d;
-                closeTarget = e;
+            // วาดภูตสายฟ้าคริสตัล (Lightning Oculus)
+            drawLaserOculus(ctx, ldX, ldY, ring === 1 ? 1.15 : 1.0);
+
+            // ดาเมจชนไฟฟ้าเมื่อศัตรูเข้าใกล้ตัวโดรน (Electric Touch Shock)
+            for (let j = entities.enemies.length - 1; j >= 0; j--) {
+              const e = entities.enemies[j];
+              if (getDistance(ldX, ldY, e.x, e.y) < e.radius + 10) {
+                const shockDmg = currentStats.damage * (0.8 + laserDroneLvl * 0.25) * droneDmgMult * ringDmgBonus;
+                e.hp -= shockDmg;
+                e.hitFlashTimer = 3;
+                if (e.hp <= 0) {
+                  entities.enemies.splice(j, 1);
+                  handleKillReward(e);
+                }
               }
             }
 
-            if (closeTarget) {
-              const lDmg = currentStats.damage * (0.8 + laserDroneLvl * 0.35) * droneDmgMult;
-              closeTarget.hp -= lDmg;
-              closeTarget.hitFlashTimer = 3;
+            // ยิงสายฟ้าเลเซอร์พลังสูง (Lightning Laser Blast)
+            if (shouldShoot && entities.enemies.length > 0) {
+              let closeTarget = null;
+              let closeDist = Math.max(220, currentStats.range * 0.95);
 
-              entities.laserDroneBeams.push({
-                x1: ldX,
-                y1: ldY,
-                x2: closeTarget.x,
-                y2: closeTarget.y,
-                life: 6
-              });
+              for (const e of entities.enemies) {
+                const d = getDistance(ldX, ldY, e.x, e.y);
+                if (d < closeDist) {
+                  closeDist = d;
+                  closeTarget = e;
+                }
+              }
 
-              entities.damageTexts.push({
-                x: closeTarget.x,
-                y: closeTarget.y - 10,
-                text: Math.round(lDmg),
-                isCrit: false,
-                alpha: 1.0,
-                vy: -1.0,
-                color: '#38bdf8'
-              });
+              if (closeTarget) {
+                const isCrit = (currentSkills.criticalStrike || 0) > 0 && Math.random() < (currentSkills.criticalStrike * 0.15);
+                const critMult = isCrit ? 2.0 : 1.0;
+                const lDmg = currentStats.damage * (1.8 + laserDroneLvl * 0.55) * droneDmgMult * ringDmgBonus * critMult;
+                
+                closeTarget.hp -= lDmg;
+                closeTarget.hitFlashTimer = 4;
 
-              if (closeTarget.hp <= 0) {
-                const idx = entities.enemies.indexOf(closeTarget);
-                if (idx !== -1) {
-                  entities.enemies.splice(idx, 1);
-                  handleKillReward(closeTarget);
+                // ลำแสงสายฟ้าหลัก (Primary Lightning Laser Beam)
+                entities.laserDroneBeams.push({
+                  x1: ldX,
+                  y1: ldY,
+                  x2: closeTarget.x,
+                  y2: closeTarget.y,
+                  life: 8,
+                  maxLife: 8,
+                  isChain: false
+                });
+
+                // อนุภาคประกายไฟฟ้ากระจาย (Electric Spark Burst)
+                for (let p = 0; p < 4; p++) {
+                  const pAngle = Math.random() * Math.PI * 2;
+                  const pSpeed = 1.5 + Math.random() * 2.5;
+                  entities.particles.push({
+                    x: closeTarget.x,
+                    y: closeTarget.y,
+                    vx: Math.cos(pAngle) * pSpeed,
+                    vy: Math.sin(pAngle) * pSpeed,
+                    life: 14,
+                    maxLife: 14,
+                    color: Math.random() < 0.5 ? '#38bdf8' : '#ffffff',
+                    size: 2.5
+                  });
+                }
+
+                entities.damageTexts.push({
+                  x: closeTarget.x,
+                  y: closeTarget.y - 12,
+                  text: Math.round(lDmg),
+                  isCrit: isCrit,
+                  alpha: 1.0,
+                  vy: -1.2,
+                  color: isCrit ? '#f59e0b' : '#38bdf8'
+                });
+
+                if (closeTarget.hp <= 0) {
+                  const idx = entities.enemies.indexOf(closeTarget);
+                  if (idx !== -1) {
+                    entities.enemies.splice(idx, 1);
+                    handleKillReward(closeTarget);
+                  }
+                }
+
+                // สายฟ้าช็อตชิ่งไปยังศัตรูใกล้เคียง (Forking Chain Lightning)
+                let chainCount = 0;
+                const maxChains = Math.min(2, Math.floor(1 + laserDroneLvl * 0.3));
+                for (let k = entities.enemies.length - 1; k >= 0; k--) {
+                  const otherEnemy = entities.enemies[k];
+                  if (otherEnemy !== closeTarget && chainCount < maxChains) {
+                    const chainDist = getDistance(closeTarget.x, closeTarget.y, otherEnemy.x, otherEnemy.y);
+                    if (chainDist < 85 * areaMult) {
+                      chainCount++;
+                      const chainDmg = lDmg * 0.65;
+                      otherEnemy.hp -= chainDmg;
+                      otherEnemy.hitFlashTimer = 3;
+
+                      entities.laserDroneBeams.push({
+                        x1: closeTarget.x,
+                        y1: closeTarget.y,
+                        x2: otherEnemy.x,
+                        y2: otherEnemy.y,
+                        life: 7,
+                        maxLife: 7,
+                        isChain: true
+                      });
+
+                      entities.damageTexts.push({
+                        x: otherEnemy.x,
+                        y: otherEnemy.y - 8,
+                        text: Math.round(chainDmg),
+                        isCrit: false,
+                        alpha: 0.9,
+                        vy: -1.0,
+                        color: '#60a5fa'
+                      });
+
+                      if (otherEnemy.hp <= 0) {
+                        entities.enemies.splice(k, 1);
+                        handleKillReward(otherEnemy);
+                      }
+                    }
+                  }
                 }
               }
             }
           }
         }
-        if (entities.laserDroneTimer > Math.max(600, (1300 - laserDroneLvl * 100) * cooldownMult)) {
+        if (shouldShoot) {
           entities.laserDroneTimer = 0;
         }
       }
 
-      // วาดเลเซอร์โดรน VFX
+      // วาดเลเซอร์โดรน VFX (Lightning Laser Arcs & Blinding Beams)
       for (let i = entities.laserDroneBeams.length - 1; i >= 0; i--) {
         const lb = entities.laserDroneBeams[i];
         lb.life--;
+        const progress = Math.max(0, lb.life / (lb.maxLife || 8));
         ctx.save();
-        ctx.globalAlpha = Math.max(0, lb.life / 6);
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
+        ctx.globalAlpha = progress;
+
+        // คำนวณจุดกึ่งกลางพร้อมลูกเล่นสายฟ้ากระตุก (Lightning Jitter)
+        const jitter = Math.sin(lb.life * 4.5) * 5;
+        const mx = (lb.x1 + lb.x2) / 2 + jitter;
+        const my = (lb.y1 + lb.y2) / 2 - jitter;
+
+        // ลำแสงนีออนฟ้าชั้นนอก (Outer Neon Lightning Glow)
+        ctx.strokeStyle = lb.isChain ? '#60a5fa' : '#00e5ff';
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = lb.isChain ? 8 : 14;
+        ctx.lineWidth = (lb.isChain ? 3 : 5) * progress;
         ctx.beginPath();
         ctx.moveTo(lb.x1, lb.y1);
+        ctx.lineTo(mx, my);
         ctx.lineTo(lb.x2, lb.y2);
         ctx.stroke();
+
+        // แกนสายฟ้าสีขาวสว่างจ้าชั้นใน (Inner Blinding White Core)
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = (lb.isChain ? 1.5 : 2.5) * progress;
+        ctx.beginPath();
+        ctx.moveTo(lb.x1, lb.y1);
+        ctx.lineTo(mx, my);
+        ctx.lineTo(lb.x2, lb.y2);
+        ctx.stroke();
+
+        // ประกายแสงวาบตรงเป้าหมาย (Impact Flare)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(lb.x2, lb.y2, (lb.isChain ? 3 : 5) * progress, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
         if (lb.life <= 0) entities.laserDroneBeams.splice(i, 1);
       }
