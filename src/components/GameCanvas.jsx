@@ -1385,7 +1385,7 @@ export default function GameCanvas({
             for (let j = entities.enemies.length - 1; j >= 0; j--) {
               const e = entities.enemies[j];
               if (getDistance(ldX, ldY, e.x, e.y) < e.radius + 10) {
-                const shockDmg = currentStats.damage * (0.8 + laserDroneLvl * 0.25) * droneDmgMult * ringDmgBonus;
+                const shockDmg = currentStats.damage * (0.4 + laserDroneLvl * 0.12) * droneDmgMult * ringDmgBonus;
                 e.hp -= shockDmg;
                 e.hitFlashTimer = 3;
                 if (e.hp <= 0) {
@@ -1398,7 +1398,7 @@ export default function GameCanvas({
             // ยิงสายฟ้าเลเซอร์พลังสูง (Lightning Laser Blast)
             if (shouldShoot && entities.enemies.length > 0) {
               let closeTarget = null;
-              let closeDist = Math.max(220, currentStats.range * 0.95);
+              let closeDist = Math.max(110, currentStats.range * 0.48);
 
               for (const e of entities.enemies) {
                 const d = getDistance(ldX, ldY, e.x, e.y);
@@ -1411,7 +1411,7 @@ export default function GameCanvas({
               if (closeTarget) {
                 const isCrit = (currentSkills.criticalStrike || 0) > 0 && Math.random() < (currentSkills.criticalStrike * 0.15);
                 const critMult = isCrit ? 2.0 : 1.0;
-                const lDmg = currentStats.damage * (1.8 + laserDroneLvl * 0.55) * droneDmgMult * ringDmgBonus * critMult;
+                const lDmg = currentStats.damage * (0.9 + laserDroneLvl * 0.28) * droneDmgMult * ringDmgBonus * critMult;
                 
                 closeTarget.hp -= lDmg;
                 closeTarget.hitFlashTimer = 4;
@@ -1468,7 +1468,7 @@ export default function GameCanvas({
                   const otherEnemy = entities.enemies[k];
                   if (otherEnemy !== closeTarget && chainCount < maxChains) {
                     const chainDist = getDistance(closeTarget.x, closeTarget.y, otherEnemy.x, otherEnemy.y);
-                    if (chainDist < 85 * areaMult) {
+                    if (chainDist < 45 * areaMult) {
                       chainCount++;
                       const chainDmg = lDmg * 0.65;
                       otherEnemy.hp -= chainDmg;
