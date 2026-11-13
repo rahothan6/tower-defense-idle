@@ -136,13 +136,41 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isGameStarted, isGameOver, isPickingCard]);
 
+  // ซิงค์สถิติส่วนตัว (personalBest) ให้ตรงกับชื่อผู้เล่นและข้อมูลบน Leaderboard
+  useEffect(() => {
+    if (loadingLeaders) return;
+    const cleanName = playerName.trim().toLowerCase();
+    if (!cleanName) return;
+
+    const leaderMatch = leaders.find(l => l.name && l.name.trim().toLowerCase() === cleanName);
+    const savedPbForName = localStorage.getItem(`idle_pb_${cleanName}`);
+
+    if (savedPbForName) {
+      const parsed = parseInt(savedPbForName, 10);
+      const target = leaderMatch ? Math.max(parsed, Number(leaderMatch.wave)) : parsed;
+      setPersonalBest(target);
+      localStorage.setItem('idle_personal_best', target.toString());
+    } else if (leaderMatch && leaderMatch.wave) {
+      const target = Number(leaderMatch.wave);
+      setPersonalBest(target);
+      localStorage.setItem(`idle_pb_${cleanName}`, target.toString());
+      localStorage.setItem('idle_personal_best', target.toString());
+    } else {
+      setPersonalBest(1);
+    }
+  }, [playerName, leaders, loadingLeaders]);
+
   // ระบบตรวจจับ Game Over แล้วบันทึกคะแนนรอบเดียว
   useEffect(() => {
     if (!isGameOver) return;
 
+    const cleanName = playerName.trim().toLowerCase();
     if (wave > personalBest) {
       setPersonalBest(wave);
       localStorage.setItem('idle_personal_best', wave.toString());
+      if (cleanName) {
+        localStorage.setItem(`idle_pb_${cleanName}`, wave.toString());
+      }
     }
 
     if (hasSavedScoreRef.current) return;
