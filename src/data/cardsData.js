@@ -75,14 +75,15 @@ export const CARDS_DATABASE = [
     color: '#22c55e',
     getDesc: (lvl, lang = 'th') => {
       const dmg = 150 + (lvl * 20);
+      const hpPct = (3 + lvl * 0.75).toFixed(1);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Spawns a venom puddle dealing 150%/s continuous damage for 4s' 
-          : `Increases poison damage to ${dmg}%/s and spawns ${lvl + 1} puddles`;
+          ? 'Venom puddle: Deals 150%/s + melts 3% Max HP/s for 4s' 
+          : `Poison melts ${dmg}%/s + ${hpPct}% Max HP/s and spawns ${lvl + 1} puddles`;
       }
       return lvl === 0 
-        ? 'สุ่มเกิดบ่อพิษเดือด สร้างดาเมจต่อเนื่อง 150%/วินาที นาน 4 วิ' 
-        : `ดาเมจพิษแรงขึ้นเป็น ${dmg}%/วินาที และเกิดพร้อมกัน ${lvl + 1} บ่อ`;
+        ? 'สุ่มเกิดบ่อพิษ: ดาเมจ 150%/วิ + กัดกร่อน 3% เลือดสูงสุด/วิ นาน 4 วิ' 
+        : `พิษแรงขึ้นเป็น ${dmg}%/วิ + กัดกร่อน ${hpPct}% เลือดสูงสุด/วิ (${lvl + 1} บ่อ)`;
     }
   },
   {
@@ -187,15 +188,16 @@ export const CARDS_DATABASE = [
     color: '#f97316',
     getDesc: (lvl, lang = 'th') => {
       const count = lvl + 1;
-      const dmg = 200 + (count * 50);
+      const normalPct = 15 + Math.round(lvl * 11.25);
+      const bossPct = (5 + lvl * 2.5).toFixed(1);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Drops 1 massive meteor dealing 250% AoE blast damage' 
-          : `Drops ${count} meteors simultaneously (${dmg}% AoE dmg each)`;
+          ? `Massive meteor blast: Deals 250% ATK + ${normalPct}% Max HP (${bossPct}% on Bosses)` 
+          : `Drops ${count} meteors simultaneously: ${(lvl + 1) * 100 + 150}% ATK + ${normalPct}% Max HP each (${bossPct}% on Bosses)`;
       }
       return lvl === 0 
-        ? 'สุ่มทิ้งอุกกาบาตเพลิง 1 ลูก ดาเมจระเบิดกว้าง 250%' 
-        : `ถล่มเป็นฝนดาวตก ${count} ลูกพร้อมกัน (ดาเมจลูกละ ${dmg}%)`;
+        ? `อุกกาบาตยักษ์ถล่ม: ดาเมจ 250% ATK + ${normalPct}% เลือดสูงสุด (บอส ${bossPct}%)` 
+        : `ถล่มเป็นฝนดาวตก ${count} ลูกพร้อมกัน: ดาเมจ ${(lvl + 1) * 100 + 150}% ATK + ${normalPct}% เลือดสูงสุด (บอส ${bossPct}%)`;
     }
   },
   {
@@ -206,14 +208,15 @@ export const CARDS_DATABASE = [
     icon: '❄️',
     color: '#38bdf8',
     getDesc: (lvl, lang = 'th') => {
+      const duration = (1.8 + (lvl + 1) * 0.5).toFixed(1);
       if (lang === 'en') {
         return lvl === 0 
-          ? 'Unleashes a frost wave dealing 80% dmg and freezes enemies for 1.5s' 
-          : `Increases damage to ${Math.round((0.8 + (lvl + 1) * 0.4) * 100)}% and freeze duration to ${(1.5 + (lvl + 1) * 0.4).toFixed(1)}s`;
+          ? 'Unleashes a frost wave dealing 120% dmg + 7% Max HP and freezes for 1.8s' 
+          : `Damage increases to ${Math.round((1.2 + (lvl + 1) * 0.4) * 100)}% + 7% Max HP and freeze duration to ${duration}s`;
       }
       return lvl === 0 
-        ? 'ระเบิดคลื่นน้ำแข็ง ดาเมจ 80% พร้อมแช่แข็ง 1.5 วิ' 
-        : `เพิ่มดาเมจเป็น ${Math.round((0.8 + (lvl + 1) * 0.4) * 100)}% และแช่แข็งนานขึ้นเป็น ${(1.5 + (lvl + 1) * 0.4).toFixed(1)} วิ`;
+        ? 'ระเบิดคลื่นน้ำแข็ง: ดาเมจ 120% + 7% เลือดสูงสุด พร้อมแช่แข็ง 1.8 วิ' 
+        : `เพิ่มดาเมจเป็น ${Math.round((1.2 + (lvl + 1) * 0.4) * 100)}% + 7% เลือดสูงสุด และแช่แข็งนานขึ้นเป็น ${duration} วิ`;
     }
   },
 
@@ -282,14 +285,14 @@ export const CARDS_DATABASE = [
     icon: '💥',
     color: '#f97316',
     getDesc: (lvl, lang = 'th') => {
-      const dmg = 20 + (lvl * 10);
+      const dmg = 35 + (lvl * 15);
       if (lang === 'en') {
         return lvl === 0
-          ? 'Bullets shatter into 4 shrapnels on impact (20% dmg each)'
+          ? 'Bullets shatter into 4 shrapnels on impact (35% dmg each)'
           : `Capped at 4 shrapnels (increases shrapnel dmg to ${dmg}%)`;
       }
       return lvl === 0
-        ? 'เมื่อกระสุนโดนเป้าหมาย แตกเป็นสะเก็ด 4 เม็ด (ดาเมจต่อนัด 20%)'
+        ? 'เมื่อกระสุนโดนเป้าหมาย แตกเป็นสะเก็ด 4 เม็ด (ดาเมจต่อนัด 35%)'
         : `จำกัดสูงสุด 4 เม็ด (เพิ่มดาเมจสะเก็ดเป็น ${dmg}%)`;
     }
   },
@@ -301,14 +304,15 @@ export const CARDS_DATABASE = [
     icon: '🔭',
     color: '#ef4444',
     getDesc: (lvl, lang = 'th') => {
+      const bossBonusPct = (4 + (lvl + 1) * 1.5).toFixed(1);
       if (lang === 'en') {
         return lvl === 0
-          ? 'Snipes highest HP target every 4.5s dealing 450% guaranteed Crit dmg'
-          : `Increases sniper damage to ${(lvl + 1) * 150 + 450}% with faster rate`;
+          ? 'Snipes highest HP target every 4.5s: 450% Crit dmg + 5.5% Boss Max HP'
+          : `Sniper damage: ${(lvl + 1) * 150 + 450}% Crit dmg + ${bossBonusPct}% Boss Max HP with faster rate`;
       }
       return lvl === 0
-        ? 'ล็อคเป้าศัตรูเลือดสูงสุดทุก 4.5 วิ ดาเมจ 450% ติดคริติคอล 100%'
-        : `ดาเมจสไนเปอร์เพิ่มเป็น ${(lvl + 1) * 150 + 450}% และยิงไวขึ้น`;
+        ? 'ล็อคเป้าศัตรูเลือดสูงสุดทุก 4.5 วิ: ดาเมจ 450% คริ 100% + เจาะเกราะบอส 5.5% เลือดสูงสุด'
+        : `ดาเมจสไนเปอร์เพิ่มเป็น ${(lvl + 1) * 150 + 450}% + เจาะเกราะบอส ${bossBonusPct}% เลือดสูงสุด`;
     }
   },
   {
@@ -359,15 +363,15 @@ export const CARDS_DATABASE = [
     icon: '🌀',
     color: '#8b5cf6',
     getDesc: (lvl, lang = 'th') => {
-      const bonus = Math.min(50, (lvl + 1) * 10);
+      const bonus = (lvl + 1) * 25;
       if (lang === 'en') {
         return lvl === 0
-          ? 'Chain hits deal +10% bonus dmg (capped at max +50% of ATK)'
-          : `Increases chain bonus damage to +${bonus}% (capped at max +50% of ATK)`;
+          ? 'Chain hits deal +25% bonus dmg (capped at max +125% of ATK)'
+          : `Increases chain bonus damage to +${bonus}% (capped at max +125% of ATK)`;
       }
       return lvl === 0
-        ? 'การโจมตีต่อเนื่องหรือแตกตัวแรงขึ้น +10% ต่อทอด (เพิ่มสูงสุดไม่เกิน 50% ของพลังโจมตี)'
-        : `โบนัสดาเมจโจมตีต่อเนื่องเพิ่มขึ้นเป็น +${bonus}% (เพิ่มสูงสุดไม่เกิน 50% ของพลังโจมตี)`;
+        ? 'การโจมตีต่อเนื่องหรือแตกตัวแรงขึ้น +25% ต่อทอด (เพิ่มสูงสุดไม่เกิน 125% ของพลังโจมตี)'
+        : `โบนัสดาเมจโจมตีต่อเนื่องเพิ่มขึ้นเป็น +${bonus}% (เพิ่มสูงสุดไม่เกิน 125% ของพลังโจมตี)`;
     }
   },
   {
@@ -473,14 +477,15 @@ export const CARDS_DATABASE = [
     icon: '🌵',
     color: '#eab308',
     getDesc: (lvl, lang = 'th') => {
+      const hpPct = (6 + lvl * 1.5).toFixed(1);
       if (lang === 'en') {
         return lvl === 0
-          ? 'Reflects 250% damage back to enemies when they touch the wizard'
-          : `Increases reflected damage to +${(lvl + 1) * 100 + 150}%`;
+          ? 'Reflects 250% contact dmg + 6% of attacker Max HP upon collision'
+          : `Reflect damage increases to +${(lvl + 1) * 100 + 150}% and +${hpPct}% attacker Max HP`;
       }
       return lvl === 0
-        ? 'เมื่อมอนสเตอร์แตะตัวจอมเวท สะท้อนดาเมจสวนกลับ 250%'
-        : `ดาเมจสะท้อนแรงขึ้นเป็น +${(lvl + 1) * 100 + 150}%`;
+        ? 'เมื่อมอนสเตอร์แตะตัว สะท้อนดาเมจ 250% + 6% เลือดสูงสุดของตัวที่ชน'
+        : `ดาเมจสะท้อนแรงขึ้นเป็น +${(lvl + 1) * 100 + 150}% และ +${hpPct}% เลือดสูงสุดของตัวที่ชน`;
     }
   },
   {

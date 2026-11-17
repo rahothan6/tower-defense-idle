@@ -415,8 +415,10 @@ export default function App() {
 
     setTowerStats((prev) => {
       switch (type) {
-        case 'damage':
-          return { ...prev, damage: prev.damage + 5, damageLevel: prev.damageLevel + 1 };
+        case 'damage': {
+          const dmgGain = Math.floor(8 + prev.damageLevel * 1.5);
+          return { ...prev, damage: prev.damage + dmgGain, damageLevel: prev.damageLevel + 1 };
+        }
         case 'attackSpeed':
           return { ...prev, attackSpeed: +(prev.attackSpeed + 0.25).toFixed(2), attackSpeedLevel: prev.attackSpeedLevel + 1 };
         case 'range':

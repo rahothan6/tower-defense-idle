@@ -251,8 +251,8 @@ export default function GameCanvas({
       const critDamageMult = baseCritDamage + critDamageBonus;
 
       const kineticLvl = currentSkills.kinetic_accel || 0;
-      // บัฟดาเมจ Kinetic Accel เริ่ม 10% + 10% ต่อเลเวล โบนัสเพิ่มได้มากสุดไม่เกิน 50% ของพลังโจมตี
-      const kineticBonusPercent = Math.min(0.50, kineticLvl * 0.10);
+      // บัฟดาเมจ Kinetic Accel +25% ต่อเลเวล สูงสุดไม่เกิน 125%
+      const kineticBonusPercent = Math.min(1.25, kineticLvl * 0.25);
       const kineticMult = 1 + kineticBonusPercent;
 
       const heavyCaliberLvl = currentSkills.heavy_caliber || 0;
@@ -569,7 +569,10 @@ export default function GameCanvas({
         for (let k = entities.enemies.length - 1; k >= 0; k--) {
           const e = entities.enemies[k];
           if (getDistance(p.x, p.y, e.x, e.y) < p.radius + e.radius) {
-            e.hp -= p.damagePerTick * 0.016;
+            // ดาเมจพื้นฐาน + กัดกร่อนตาม % เลือดสูงสุดต่อวินาที
+            const hpPercentPerSec = (e.isBoss ? 0.008 : (e.isMiniBoss ? 0.015 : 0.03)) * (1 + (poisonLvl - 1) * 0.25) * spellDamageMult;
+            const tickDmg = (p.damagePerTick + e.maxHp * hpPercentPerSec) * 0.016;
+            e.hp -= tickDmg;
             e.poisonedTimer = 35;
             if (Math.random() < 0.08) e.hitFlashTimer = 2;
             if (e.hp <= 0) {
@@ -722,7 +725,7 @@ export default function GameCanvas({
           entities.frostNovaWave = {
             radius: 10,
             maxRadius: (160 + frostLvl * 20) * areaMult,
-            freezeDuration: (1.5 + frostLvl * 0.4) * durationMult
+            freezeDuration: (1.8 + frostLvl * 0.5) * durationMult
           };
         }
       }
@@ -737,9 +740,6 @@ export default function GameCanvas({
         ctx.arc(centerX, centerY, fn.radius, 0, Math.PI * 2);
         ctx.stroke();
 
-        // คำนวณดาเมจคลื่นน้ำแข็ง
-        const frostDamage = currentStats.damage * (0.8 + frostLvl * 0.4) * spellDamageMult;
-
         for (let j = entities.enemies.length - 1; j >= 0; j--) {
           const e = entities.enemies[j];
           const d = getDistance(centerX, centerY, e.x, e.y);
@@ -748,16 +748,21 @@ export default function GameCanvas({
           if (Math.abs(d - fn.radius) < 18 && !e.hitByCurrentWave) {
             e.hitByCurrentWave = true;
 
-            // บอสหลุดไวขึ้น 70% (เหลือเวลา 30%), มินิบอสหลุดไวขึ้น 50% (เหลือเวลา 50%)
+            // บอสหลุดไวขึ้น 60% (เหลือเวลา 40%), มินิบอสหลุดไวขึ้น 40% (เหลือเวลา 60%)
             let resistFactor = 1.0;
             if (e.isBoss) {
-              resistFactor = 0.30;
+              resistFactor = 0.40;
             } else if (e.isMiniBoss) {
-              resistFactor = 0.50;
+              resistFactor = 0.60;
             }
 
             const freezeFrames = Math.round(fn.freezeDuration * 60 * resistFactor);
             e.frozenTimer = Math.max(e.frozenTimer || 0, freezeFrames);
+
+            // ดาเมจคลื่นน้ำแข็ง: ดาเมจพื้นฐาน + % เลือดสูงสุด
+            const frostHpBonus = (e.isBoss ? 0.02 : (e.isMiniBoss ? 0.04 : 0.07)) * e.maxHp;
+            const frostDamage = (currentStats.damage * (1.2 + frostLvl * 0.4) + frostHpBonus) * spellDamageMult;
+
             e.hp -= frostDamage;
             e.hitFlashTimer = 3;
 
@@ -811,6 +816,7 @@ export default function GameCanvas({
               startY: -50,
               radius: blastRadius,
               damage: meteorDamage,
+              meteorLvl,
               progress: -(mCount * 0.12),
               hasExploded: false,
               explosionLife: 16
@@ -891,17 +897,21 @@ export default function GameCanvas({
           ctx.shadowBlur = 0;
 
         } else if (!m.hasExploded) {
-          // 3. จังหวะกระทบพื้นระเบิดตูม สร้างความเสียหาย
+          // 3. จังหวะกระทบพื้นระเบิดตูม สร้างความเสียหาย (ดาเมจพื้นฐาน + % Max HP)
           m.hasExploded = true;
           for (let j = entities.enemies.length - 1; j >= 0; j--) {
             const e = entities.enemies[j];
             if (getDistance(m.targetX, m.targetY, e.x, e.y) < m.radius + e.radius) {
-              e.hp -= m.damage;
+              const hpPercent = e.isBoss
+                ? (0.05 + (m.meteorLvl - 1) * 0.025)
+                : (e.isMiniBoss ? (0.08 + (m.meteorLvl - 1) * 0.04) : (0.15 + (m.meteorLvl - 1) * 0.1125));
+              const totalDamage = m.damage + (e.maxHp * hpPercent * spellDamageMult);
+              e.hp -= totalDamage;
               e.hitFlashTimer = 4;
               entities.damageTexts.push({
                 x: e.x,
                 y: e.y - 12,
-                text: Math.round(m.damage),
+                text: Math.round(totalDamage),
                 isCrit: true,
                 alpha: 1.0,
                 vy: -1.5
@@ -1018,7 +1028,10 @@ export default function GameCanvas({
           }
 
           if (bossTarget) {
-            const sniperDamage = currentStats.damage * (4.5 + sniperLvl * 1.5) * critDamageMult;
+            // ดาเมจสไนเปอร์: โจมตีติดคริ 100% + โบนัสเจาะเกราะบอสตาม % Max HP
+            const bossHpPercent = (bossTarget.isBoss || bossTarget.isMiniBoss) ? (0.04 + sniperLvl * 0.015) : 0;
+            const bossExecuteBonus = bossTarget.maxHp * bossHpPercent;
+            const sniperDamage = (currentStats.damage * (4.5 + sniperLvl * 1.5) * critDamageMult) + bossExecuteBonus;
             bossTarget.hp -= sniperDamage;
             bossTarget.hitFlashTimer = 5;
 
@@ -1168,13 +1181,13 @@ export default function GameCanvas({
               color: b.isShrapnel ? '#fb923c' : (b.isCrit ? '#f59e0b' : '#f8fafc')
             });
 
-            // ปล่อยสะเก็ดระเบิด (Shrapnel Round - จำกัดแค่ 4 เม็ด ดาเมจเริ่ม 20% + 10% ต่อเวล)
+            // ปล่อยสะเก็ดระเบิด (Shrapnel Round - ดาเมจเริ่ม 35% + 15% ต่อเวล)
             const shrapnelLvl = currentSkills.shrapnel || 0;
             if (!b.isShrapnel && shrapnelLvl > 0) {
               const shrapnelCount = 4;
-              const shrapnelDmgMult = Math.min(1.0, 0.20 + (shrapnelLvl - 1) * 0.10);
+              const shrapnelDmgMult = Math.min(1.0, 0.35 + (shrapnelLvl - 1) * 0.15);
               const shrapnelBase = b.damage * shrapnelDmgMult;
-              const shrapnelDmg = Math.min(currentStats.damage * 1.5, shrapnelBase * (kineticLvl > 0 ? kineticMult : 1));
+              const shrapnelDmg = Math.min(currentStats.damage * 2.5, shrapnelBase * (kineticLvl > 0 ? kineticMult : 1));
               for (let s = 0; s < shrapnelCount; s++) {
                 const sAngle = (Math.PI * 2 / shrapnelCount) * s + (Math.random() * 0.3 - 0.15);
                 entities.bullets.push({
@@ -1207,9 +1220,9 @@ export default function GameCanvas({
               }
 
               if (nextTarget) {
-                // บัฟดาเมจชิ่งจาก Kinetic Accel (เพิ่มได้มากสุดไม่เกิน 50% ของพลังโจมตี)
+                // บัฟดาเมจชิ่งจาก Kinetic Accel (เพิ่มได้มากสุดตาม kineticBonusPercent ของพลังโจมตี)
                 if (kineticLvl > 0) {
-                  const maxAllowed = (b.baseDamage || currentStats.damage) + (currentStats.damage * 0.50);
+                  const maxAllowed = (b.baseDamage || currentStats.damage) + (currentStats.damage * kineticBonusPercent);
                   b.damage = Math.min(maxAllowed, b.damage * kineticMult);
                 }
 
@@ -1691,9 +1704,11 @@ export default function GameCanvas({
           // เกราะไททาเนียมลดทอนดาเมจ (Titanium Plating)
           const dmg = Math.max(1, Math.round(rawDmg * (1 - damageReduction)));
 
-          // เกราะหนามสะท้อนดาเมจ (Spiked Retaliation)
+          // เกราะหนามสะท้อนดาเมจ (Spiked Retaliation - สะท้อนดาเมจชน + % Max HP ตัวที่ชน)
           if (thornsMult > 0) {
-            const reflectDmg = Math.round(dmg * thornsMult);
+            const hpThornsPercent = (e.isBoss ? 0.015 : (e.isMiniBoss ? 0.03 : 0.06)) * (1 + (thornsLvl - 1) * 0.25);
+            const hpReflect = Math.round(e.maxHp * hpThornsPercent);
+            const reflectDmg = Math.round(dmg * thornsMult) + hpReflect;
             e.hp -= reflectDmg;
             entities.damageTexts.push({
               x: e.x,
