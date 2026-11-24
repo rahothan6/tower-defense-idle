@@ -97,7 +97,7 @@ export default function BasketDetailView({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>
-                  {basket.name}
+                  ตะกร้า #{basket.basketNumber}{basket.name && basket.name !== `ตะกร้า #${basket.basketNumber}` ? ` - ${basket.name}` : ''}
                 </h2>
                 <span style={{ fontSize: '22px' }}>{basket.icon || '🧺'}</span>
               </div>

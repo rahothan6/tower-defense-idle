@@ -138,7 +138,7 @@ export default function AllItemsSection({
               <option value="all">🧺 ดูทุกตะกร้า</option>
               {baskets.map((b) => (
                 <option key={b.id} value={b.id}>
-                  ตะกร้า #{b.basketNumber}
+                  ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
                 </option>
               ))}
             </select>

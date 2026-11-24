@@ -96,7 +96,7 @@ export default function BasketsSection({
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
                       backgroundColor: basketColor,
                       color: '#ffffff',
@@ -108,13 +108,14 @@ export default function BasketsSection({
                       justifyContent: 'center',
                       fontSize: '22px',
                       fontWeight: '900',
-                      boxShadow: `0 4px 10px ${basketColor}66`
+                      boxShadow: `0 4px 10px ${basketColor}66`,
+                      flexShrink: 0
                     }}>
                       #{basket.basketNumber}
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff' }}>
-                        ตะกร้า #{basket.basketNumber}
+                      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', lineHeight: 1.3 }}>
+                        ตะกร้า #{basket.basketNumber}{basket.name && basket.name !== `ตะกร้า #${basket.basketNumber}` ? ` - ${basket.name}` : ''}
                       </h3>
                     </div>
                   </div>

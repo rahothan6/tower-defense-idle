@@ -171,7 +171,7 @@ export default function SearchSection({
               <option value="all">ดูของในทุกตะกร้า ({items.length} อย่าง)</option>
               {baskets.map((b) => (
                 <option key={b.id} value={b.id}>
-                  ตะกร้า #{b.basketNumber}
+                  ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
                 </option>
               ))}
             </select>
