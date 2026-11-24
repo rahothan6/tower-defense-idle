@@ -140,3 +140,29 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
+
+/* โหมดหน้าเว็บจัดการตะกร้าเก็บของ (Storage Mode) - ปลดล็อกการเลื่อนหน้าจอและการแตะพิมพ์ */
+html.storage-mode,
+body.storage-mode {
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: auto !important;
+  -webkit-overscroll-behavior: auto !important;
+  touch-action: auto !important;
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -webkit-touch-callout: default !important;
+  background-color: #0b0f19 !important;
+}
+
+body.storage-mode #root {
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow: visible !important;
+}
