@@ -171,7 +171,7 @@ export default function SearchSection({
               <option value="all">ดูของในทุกตะกร้า ({items.length} อย่าง)</option>
               {baskets.map((b) => (
                 <option key={b.id} value={b.id}>
-                  ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
+                  {b.basketNumber}{b.name ? ` - ${b.name}` : ''}
                 </option>
               ))}
             </select>
@@ -249,20 +249,20 @@ export default function SearchSection({
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '6px',
+                        justifyContent: 'center',
                         backgroundColor: basketColor,
                         color: '#ffffff',
-                        padding: '10px 22px',
+                        width: '56px',
+                        height: '56px',
                         borderRadius: '14px',
-                        fontSize: '26px',
+                        fontSize: '30px',
                         fontWeight: '900',
                         border: 'none',
                         cursor: 'pointer',
-                        boxShadow: `0 4px 14px ${basketColor}66`,
-                        letterSpacing: '0.5px'
+                        boxShadow: `0 4px 14px ${basketColor}66`
                       }}
                     >
-                      ตะกร้า #{item.basketNumber || basket?.basketNumber || '?'}
+                      {item.basketNumber || basket?.basketNumber || '?'}
                     </button>
                   </div>
 

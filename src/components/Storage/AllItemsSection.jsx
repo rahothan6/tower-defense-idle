@@ -138,7 +138,7 @@ export default function AllItemsSection({
               <option value="all">🧺 ดูทุกตะกร้า</option>
               {baskets.map((b) => (
                 <option key={b.id} value={b.id}>
-                  ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
+                  {b.basketNumber}{b.name ? ` - ${b.name}` : ''}
                 </option>
               ))}
             </select>
@@ -216,18 +216,20 @@ export default function AllItemsSection({
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       backgroundColor: basketColor,
                       color: '#ffffff',
-                      padding: '8px 16px',
+                      width: '44px',
+                      height: '44px',
                       borderRadius: '10px',
-                      fontSize: '18px',
+                      fontSize: '22px',
                       fontWeight: '900',
                       border: 'none',
                       cursor: 'pointer',
-                      whiteSpace: 'nowrap'
+                      flexShrink: 0
                     }}
                   >
-                    ตะกร้า #{item.basketNumber || basket?.basketNumber || '?'}
+                    {item.basketNumber || basket?.basketNumber || '?'}
                   </button>
 
                   <div>

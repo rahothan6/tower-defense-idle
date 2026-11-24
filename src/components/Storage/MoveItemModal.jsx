@@ -75,7 +75,7 @@ export default function MoveItemModal({ isOpen, onClose, onMove, item, baskets =
           <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>สิ่งของที่จะย้าย:</div>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#60a5fa' }}>{item.name}</div>
           <div style={{ fontSize: '13px', color: '#d1d5db', marginTop: '4px' }}>
-            ปัจจุบันอยู่ใน: <strong>ตะกร้า #{item.basketNumber} ({currentBasket?.name || item.basketName})</strong>
+            ปัจจุบันอยู่ใน: <strong>{item.basketNumber} {currentBasket?.name || item.basketName ? `(${currentBasket?.name || item.basketName})` : ''}</strong>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export default function MoveItemModal({ isOpen, onClose, onMove, item, baskets =
                 .filter((b) => b.id !== item.basketId)
                 .map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.icon || '🧺'} ตะกร้า #{b.basketNumber} - {b.name} {b.location ? `(${b.location})` : ''}
+                    {b.basketNumber}{b.name ? ` - ${b.name}` : ''}
                   </option>
                 ))}
             </select>

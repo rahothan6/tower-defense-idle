@@ -106,16 +106,16 @@ export default function BasketsSection({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '22px',
+                      fontSize: '24px',
                       fontWeight: '900',
                       boxShadow: `0 4px 10px ${basketColor}66`,
                       flexShrink: 0
                     }}>
-                      #{basket.basketNumber}
+                      {basket.basketNumber}
                     </div>
                     <div>
                       <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', lineHeight: 1.3 }}>
-                        ตะกร้า #{basket.basketNumber}{basket.name && basket.name !== `ตะกร้า #${basket.basketNumber}` ? ` - ${basket.name}` : ''}
+                        {basket.name || basket.basketNumber}
                       </h3>
                     </div>
                   </div>

@@ -155,7 +155,7 @@ export default function StorageManager({ onNavigateToGame }) {
             await batch.commit();
           }
         }
-        showToast(`แก้ไขข้อมูลตะกร้า #${basketData.basketNumber} เรียบร้อย`);
+        showToast(`แก้ไขข้อมูล ${basketData.name || basketData.basketNumber} เรียบร้อย`);
       } else {
         // เพิ่มตะกร้าใหม่
         await addDoc(collection(db, 'storage_baskets'), {
@@ -163,7 +163,7 @@ export default function StorageManager({ onNavigateToGame }) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        showToast(`สร้างตะกร้า #${basketData.basketNumber} สำเร็จแล้ว`);
+        showToast(`สร้าง ${basketData.name || basketData.basketNumber} สำเร็จแล้ว`);
       }
       setIsBasketModalOpen(false);
     } catch (err) {
@@ -204,7 +204,7 @@ export default function StorageManager({ onNavigateToGame }) {
         setActiveTab('baskets');
       }
 
-      showToast(`ลบตะกร้า #${basket.basketNumber} และสิ่งของข้างในเรียบร้อย`);
+      showToast(`ลบ ${basket.name || basket.basketNumber} และสิ่งของข้างในเรียบร้อย`);
     } catch (err) {
       console.error('Delete basket error:', err);
       alert('เกิดข้อผิดพลาดในการลบตะกร้า: ' + err.message);
@@ -249,7 +249,7 @@ export default function StorageManager({ onNavigateToGame }) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        showToast(`เพิ่ม "${itemData.name}" ลงในตะกร้า #${itemData.basketNumber} เรียบร้อยแล้ว`);
+        showToast(`เพิ่ม "${itemData.name}" เรียบร้อยแล้ว`);
       }
       setIsItemModalOpen(false);
     } catch (err) {
@@ -547,7 +547,7 @@ export default function StorageManager({ onNavigateToGame }) {
         targetType={deleteConfirm.type}
         targetName={
           deleteConfirm.type === 'basket'
-            ? `ตะกร้า #${deleteConfirm.target?.basketNumber} (${deleteConfirm.target?.name})`
+            ? `${deleteConfirm.target?.basketNumber} ${deleteConfirm.target?.name ? `(${deleteConfirm.target?.name})` : ''}`
             : deleteConfirm.target?.name
         }
         itemCount={deleteConfirm.itemCount}

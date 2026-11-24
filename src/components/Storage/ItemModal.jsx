@@ -296,7 +296,7 @@ export default function ItemModal({
                 >
                   {baskets.map((b) => (
                     <option key={b.id} value={b.id}>
-                      ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
+                      {b.basketNumber}{b.name ? ` - ${b.name}` : ''}
                     </option>
                   ))}
                 </select>
@@ -477,7 +477,7 @@ export default function ItemModal({
               >
                 {baskets.map((b) => (
                   <option key={b.id} value={b.id}>
-                    ตะกร้า #{b.basketNumber}{b.name && b.name !== `ตะกร้า #${b.basketNumber}` ? ` - ${b.name}` : ''}
+                    {b.basketNumber}{b.name ? ` - ${b.name}` : ''}
                   </option>
                 ))}
               </select>

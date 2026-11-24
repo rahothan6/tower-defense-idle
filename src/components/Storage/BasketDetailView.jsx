@@ -86,18 +86,18 @@ export default function BasketDetailView({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '28px',
-              fontWeight: '800',
+              fontSize: '32px',
+              fontWeight: '900',
               boxShadow: `0 8px 16px ${basketColor}66`,
               flexShrink: 0
             }}>
-              #{basket.basketNumber}
+              {basket.basketNumber}
             </div>
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#ffffff' }}>
-                  ตะกร้า #{basket.basketNumber}{basket.name && basket.name !== `ตะกร้า #${basket.basketNumber}` ? ` - ${basket.name}` : ''}
+                  {basket.name || basket.basketNumber}
                 </h2>
                 <span style={{ fontSize: '22px' }}>{basket.icon || '🧺'}</span>
               </div>
