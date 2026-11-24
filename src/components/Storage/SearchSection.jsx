@@ -179,25 +179,25 @@ export default function SearchSection({
         )}
       </div>
 
-      {/* แถบสรุปผล */}
-      <div style={{
-        marginBottom: '16px'
-      }}>
-        <div style={{ fontSize: '16px', color: '#d1d5db' }}>
-          {searchQuery ? (
-            <span>
-              ค้นพบ <strong style={{ color: '#60a5fa', fontSize: '20px' }}>{filteredItems.length}</strong> รายการ
-            </span>
-          ) : (
-            <span>
-              ของทั้งหมด <strong style={{ color: '#34d399', fontSize: '20px' }}>{filteredItems.length}</strong> รายการ
-            </span>
-          )}
+      {/* ผลลัพธ์การค้นหา: ไม่แสดงของจนกว่าจะเริ่มพิมพ์ค้นหา */}
+      {!searchQuery.trim() && selectedBasketId === 'all' ? (
+        <div style={{
+          backgroundColor: '#111827',
+          border: '1px dashed #374151',
+          borderRadius: '20px',
+          padding: '60px 20px',
+          textAlign: 'center',
+          color: '#9ca3af'
+        }}>
+          <div style={{ fontSize: '56px', marginBottom: '14px' }}>🔍</div>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '22px', color: '#ffffff', fontWeight: 'bold' }}>
+            พิมพ์ชื่อของในช่องค้นหาด้านบน
+          </h3>
+          <p style={{ margin: 0, fontSize: '16px', color: '#9ca3af' }}>
+            ระบบจะค้นหาและแสดงเบอร์ตะกร้าให้ทันที
+          </p>
         </div>
-      </div>
-
-      {/* รายการผลลัพธ์: เน้นบอกเลขตะกร้าตัวใหญ่ๆ ชัดเจน */}
-      {filteredItems.length === 0 ? (
+      ) : filteredItems.length === 0 ? (
         <div style={{
           backgroundColor: '#111827',
           border: '2px dashed #374151',
@@ -208,16 +208,18 @@ export default function SearchSection({
         }}>
           <div style={{ fontSize: '50px', marginBottom: '14px' }}>🔍</div>
           <h3 style={{ margin: '0 0 10px 0', fontSize: '22px', color: '#ffffff', fontWeight: 'bold' }}>
-            {searchQuery ? `หาของชื่อ "${searchQuery}" ไม่เจอ` : 'ยังไม่มีสิ่งของในระบบ'}
+            {searchQuery ? `หาของชื่อ "${searchQuery}" ไม่เจอ` : 'ไม่พบของในตะกร้านี้'}
           </h3>
           <p style={{ margin: 0, fontSize: '16px', color: '#9ca3af' }}>
-            {searchQuery
-              ? 'ลองตรวจสอบตัวสะกด หรือกดปุ่ม "เพิ่มของ" ด้านบน'
-              : 'กดปุ่ม "เพิ่มของ" ด้านบนเพื่อเริ่มใส่ของลงตะกร้า'}
+            ลองตรวจสอบตัวสะกด หรือกดปุ่ม "เพิ่มของ" ด้านบน
           </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* แถบสรุปผล */}
+          <div style={{ marginBottom: '6px', fontSize: '16px', color: '#d1d5db' }}>
+            ค้นพบ <strong style={{ color: '#60a5fa', fontSize: '20px' }}>{filteredItems.length}</strong> รายการ
+          </div>
           {filteredItems.map((item) => {
             const basket = basketMap[item.basketId];
             const basketColor = basket?.color || '#3b82f6';
